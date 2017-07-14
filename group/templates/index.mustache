@@ -101,7 +101,7 @@
                     <input type="submit" name="act_deletegroup" id="deletegroup" value="{{#str}}deleteselectedgroup, group{{/str}}" {{#deletegroupdisabled}}disabled="disabled"{{/deletegroupdisabled}} class="btn btn-default" />
                 </div>
                 <div class="form-group">
-                    <input type="submit" name="act_showcreateorphangroupform" id="showcreateorphangroupform" value="{{#str}}creategroup, group{{/str}}" class="btn btn-default" />
+                    <input type="submit" name="act_showcreateorphangroupform" id="showcreateorphangroupform" data-action="creategroupmodal" value="{{#str}}creategroup, group{{/str}}" class="btn btn-default" />
                 </div>
                 <div class="form-group">
                     <input type="submit" name="act_showautocreategroupsform" id="showautocreategroupsform" value="{{#str}}autocreategroups, group{{/str}}" class="btn btn-default" />
@@ -141,5 +141,12 @@
         M.core_group.init_index(Y, "{{wwwroot}}", {{courseid}});
         var undeletableGroups = JSON.parse('{{{undeletablegroups}}}');
         M.core_group.groupslist(Y, undeletableGroups);
+
+
+    });
+
+    // New code to create groups in a modal.
+    require(['core_group/newgroup'], function(NewGroup) {
+        NewGroup.init('[data-action=creategroupmodal]', {{contextid}});
     });
 {{/js}}

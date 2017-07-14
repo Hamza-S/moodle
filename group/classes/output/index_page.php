@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 use renderable;
 use renderer_base;
 use stdClass;
+use context_course;
 use templatable;
 
 /**
@@ -94,6 +95,8 @@ class index_page implements renderable, templatable {
 
         // Variables that will be passed to the JS helper.
         $data->courseid = $this->courseid;
+        $context = context_course::instance($this->courseid);
+        $data->contextid = $context->id;
         $data->wwwroot = $CFG->wwwroot;
         // To be passed to the JS init script in the template. Encode as a JSON string.
         $data->undeletablegroups = json_encode($this->undeletablegroups);

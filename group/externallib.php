@@ -1578,4 +1578,86 @@ class core_group_external extends external_api {
     public static function update_groups_returns() {
         return null;
     }
+
+    /**
+     * Describes the parameters for submit_create_group_form webservice.
+     * @return external_function_parameters
+     */
+    public static function submit_create_group_form_parameters() {
+        return new external_function_parameters(
+            array(
+                'contextid' => new external_value(PARAM_INT, 'The context id for the course'),
+                'jsonformdata' => new external_value(PARAM_RAW, 'The data from the create group form, encoded as a json array')
+            )
+        );
+    }
+
+    /**
+     * Submit the create group form.
+     *
+     * @param int $contextid The context id for the course.
+     * @param string $jsonformdata The data from the form, encoded as a json array.
+     * @return int new group id.
+     */
+    public static function submit_create_group_form($contextid, $jsonformdata) {
+        global $CFG, $USER;
+
+        require_once($CFG->dirroot . '/group/lib.php');
+        require_once($CFG->dirroot . '/group/group_form.php');
+
+        // We always must pass webservice params through validate_parameters.
+        $params = self::validate_parameters(self::submit_create_group_form_parameters(),
+                                            ['contextid' => $contextid, 'jsonformdata' => $jsonformdata]);
+
+        $context = context::instance_by_id($params['contextid'], MUST_EXIST);
+
+        // We always must call validate_context in a webservice.
+        self::validate_context($context);
+        require_capability('moodle/course:managegroups', $context);
+
+        list($ignored, $course) = get_context_info_array($context->id);
+        $serialiseddata = json_decode($params['jsonformdata']);
+
+        $data = array();
+        parse_str($serialiseddata, $data);
+
+        $warnings = array();
+
+        $editoroptions = [
+            'maxfiles' => EDITOR_UNLIMITED_FILES,
+            'maxbytes' => $course->maxbytes,
+            'trust' => false,
+            'context' => $context,
+            'noclean' => true,
+            'subdirs' => false
+        ];
+        $group = new stdClass();
+        $group->courseid = $course->id;
+        $group = file_prepare_standard_editor($group, 'description', $editoroptions, $context, 'group', 'description', null);
+
+        // The last param is the ajax submitted data.
+        $mform = new group_form(null, array('editoroptions' => $editoroptions), 'post', '', null, true, $data);
+
+        $validateddata = $mform->get_data();
+
+        if ($validateddata) {
+            // Do the action.
+            $groupid = groups_create_group($validateddata, $mform, $editoroptions);
+        } else {
+            // Generate a warning.
+            throw new moodle_exception('erroreditgroup', 'group');
+        }
+
+        return $groupid;
+    }
+
+    /**
+     * Returns description of method result value.
+     *
+     * @return external_description
+     * @since Moodle 3.0
+     */
+    public static function submit_create_group_form_returns() {
+        return new external_value(PARAM_INT, 'group id');
+    }
 }

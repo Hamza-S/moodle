@@ -743,6 +743,15 @@ $functions = array(
         'type' => 'write',
         'capabilities' => 'moodle/course:managegroups',
     ),
+    'core_group_submit_create_group_form' => array(
+        'classname' => 'core_group_external',
+        'methodname' => 'submit_create_group_form',
+        'classpath' => 'group/externallib.php',
+        'description' => 'Creates a group from submitted form data',
+        'ajax' => true,
+        'type' => 'write',
+        'capabilities' => 'moodle/course:managegroups',
+    ),
     'core_group_assign_grouping' => array(
         'classname' => 'core_group_external',
         'methodname' => 'assign_grouping',
