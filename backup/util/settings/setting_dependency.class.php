@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -82,7 +81,7 @@ abstract class setting_dependency {
      * Destroy all circular references. It helps PHP 5.2 a lot!
      */
     public function destroy() {
-        // No need to destroy anything recursively here, direct reset
+        // No need to destroy anything recursively here, direct reset.
         $this->setting = null;
         $this->dependentsetting = null;
     }
@@ -94,16 +93,19 @@ abstract class setting_dependency {
      * @return bool
      */
     final public function process_change($changetype, $oldvalue) {
-        // Check the type of change requested
+        // Check the type of change requested.
         switch ($changetype) {
-            // Process a status change
-            case base_setting::CHANGED_STATUS: return $this->process_status_change($oldvalue);
-            // Process a visibility change
-            case base_setting::CHANGED_VISIBILITY: return $this->process_visibility_change($oldvalue);
-            // Process a value change
-            case base_setting::CHANGED_VALUE: return $this->process_value_change($oldvalue);
+            // Process a status change.
+            case base_setting::CHANGED_STATUS:
+                return $this->process_status_change($oldvalue);
+            // Process a visibility change.
+            case base_setting::CHANGED_VISIBILITY:
+                return $this->process_visibility_change($oldvalue);
+            // Process a value change.
+            case base_setting::CHANGED_VALUE:
+                return $this->process_value_change($oldvalue);
         }
-        // Throw an exception if we get this far
+        // Throw an exception if we get this far.
         throw new backup_ui_exception('unknownchangetype');
     }
     /**
@@ -112,11 +114,11 @@ abstract class setting_dependency {
      * @return bool
      */
     protected function process_visibility_change($oldvisibility) {
-        // Store the current dependent settings visibility for comparison
+        // Store the current dependent settings visibility for comparison.
         $prevalue = $this->dependentsetting->get_visibility();
-        // Set it regardless of whether we need to
+        // Set it regardless of whether we need to.
         $this->dependentsetting->set_visibility($this->setting->get_visibility());
-        // Return true if it changed
+        // Return true if it changed.
         return ($prevalue != $this->dependentsetting->get_visibility());
     }
     /**
@@ -182,7 +184,7 @@ class setting_dependency_disabledif_equals extends setting_dependency {
      */
     public function __construct(base_setting $setting, base_setting $dependentsetting, $value, $defaultvalue = false) {
         parent::__construct($setting, $dependentsetting, $defaultvalue);
-        $this->value = ($value)?(string)$value:0;
+        $this->value = ($value) ? (string)$value : 0;
     }
     /**
      * Returns true if the dependent setting is locked by this setting_dependency.
@@ -223,10 +225,10 @@ class setting_dependency_disabledif_equals extends setting_dependency {
                 $this->dependentsetting->set_value($this->defaultvalue);
             }
         } else if ($this->dependentsetting->get_status() == base_setting::LOCKED_BY_HIERARCHY) {
-            // We can unlock the dependent setting
+            // We can unlock the dependent setting.
             $this->dependentsetting->set_status(base_setting::NOT_LOCKED);
         }
-        // Return true if the value has changed for the dependent setting
+        // Return true if the value has changed for the dependent setting.
         return ($prevalue != $this->dependentsetting->get_value());
     }
     /**
@@ -235,9 +237,9 @@ class setting_dependency_disabledif_equals extends setting_dependency {
      * @return bool
      */
     protected function process_status_change($oldstatus) {
-        // Store the dependent status
+        // Store the dependent status.
         $prevalue = $this->dependentsetting->get_status();
-        // Store the current status
+        // Store the current status.
         $currentstatus = $this->setting->get_status();
         if ($currentstatus == base_setting::NOT_LOCKED) {
             if ($prevalue == base_setting::LOCKED_BY_HIERARCHY && !$this->evaluate_disabled_condition($this->setting->get_value())) {
@@ -245,7 +247,7 @@ class setting_dependency_disabledif_equals extends setting_dependency {
                 $this->dependentsetting->set_status(base_setting::NOT_LOCKED);
             }
         } else {
-            // Make sure the dependent setting is also locked, in this case by hierarchy
+            // Make sure the dependent setting is also locked, in this case by hierarchy.
             $this->dependentsetting->set_status(base_setting::LOCKED_BY_HIERARCHY);
         }
         // Return true if the dependent setting has changed.
@@ -256,17 +258,17 @@ class setting_dependency_disabledif_equals extends setting_dependency {
      * @return bool True if there were changes
      */
     public function enforce() {
-        // This will be set to true if ANYTHING changes
+        // This will be set to true if ANYTHING changes.
         $changes = false;
-        // First process any value changes
+        // First process any value changes.
         if ($this->process_value_change($this->setting->get_value())) {
             $changes = true;
         }
-        // Second process any status changes
+        // Second process any status changes.
         if ($this->process_status_change($this->setting->get_status())) {
             $changes = true;
         }
-        // Finally process visibility changes
+        // Finally process visibility changes.
         if ($this->process_visibility_change($this->setting->get_visibility())) {
             $changes = true;
         }
@@ -279,10 +281,10 @@ class setting_dependency_disabledif_equals extends setting_dependency {
      */
     public function get_moodleform_properties() {
         return array(
-            'setting'=>$this->dependentsetting->get_ui_name(),
-            'dependenton'=>$this->setting->get_ui_name(),
-            'condition'=>'eq',
-            'value'=>$this->value
+            'setting' => $this->dependentsetting->get_ui_name(),
+            'dependenton' => $this->setting->get_ui_name(),
+            'condition' => 'eq',
+            'value' => $this->value
         );
     }
 
@@ -299,12 +301,12 @@ class setting_dependency_disabledif_equals extends setting_dependency {
 }
 
 /**
-* A dependency that disables the secondary setting if the primary setting is
-* not equal to the provided value
-*
-* @copyright 2011 Darko Miletic <dmiletic@moodlerooms.com>
-* @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-*/
+ * A dependency that disables the secondary setting if the primary setting is
+ * not equal to the provided value
+ *
+ * @copyright 2011 Darko Miletic <dmiletic@moodlerooms.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class setting_dependency_disabledif_not_equals extends setting_dependency_disabledif_equals {
 
     /**
@@ -317,16 +319,16 @@ class setting_dependency_disabledif_not_equals extends setting_dependency_disabl
     }
 
     /**
-    * Returns an array of properties suitable to be used to define a moodleforms
-    * disabled command
-    * @return array
-    */
+     * Returns an array of properties suitable to be used to define a moodleforms
+     * disabled command
+     * @return array
+     */
     public function get_moodleform_properties() {
         return array(
-                'setting'=>$this->dependentsetting->get_ui_name(),
-                'dependenton'=>$this->setting->get_ui_name(),
-                'condition'=>'notequal',
-                'value'=>$this->value
+                'setting' => $this->dependentsetting->get_ui_name(),
+                'dependenton' => $this->setting->get_ui_name(),
+                'condition' => 'notequal',
+                'value' => $this->value
         );
     }
 }
@@ -349,10 +351,10 @@ class setting_dependency_disabledif_in_array extends setting_dependency_disabled
      */
     public function get_moodleform_properties() {
         return array(
-            'setting'=>$this->dependentsetting->get_ui_name(),
-            'dependenton'=>$this->setting->get_ui_name(),
-            'condition'=>'eq',
-            'value'=>$this->value
+            'setting' => $this->dependentsetting->get_ui_name(),
+            'dependenton' => $this->setting->get_ui_name(),
+            'condition' => 'eq',
+            'value' => $this->value
         );
     }
 
@@ -381,9 +383,9 @@ class setting_dependency_disabledif_checked extends setting_dependency_disabledi
      */
     public function get_moodleform_properties() {
         return array(
-            'setting'=>$this->dependentsetting->get_ui_name(),
-            'dependenton'=>$this->setting->get_ui_name(),
-            'condition'=>'checked'
+            'setting' => $this->dependentsetting->get_ui_name(),
+            'dependenton' => $this->setting->get_ui_name(),
+            'condition' => 'checked'
         );
     }
 }
@@ -407,9 +409,9 @@ class setting_dependency_disabledif_not_checked extends setting_dependency_disab
      */
     public function get_moodleform_properties() {
         return array(
-            'setting'=>$this->dependentsetting->get_ui_name(),
-            'dependenton'=>$this->setting->get_ui_name(),
-            'condition'=>'notchecked'
+            'setting' => $this->dependentsetting->get_ui_name(),
+            'dependenton' => $this->setting->get_ui_name(),
+            'condition' => 'notchecked'
         );
     }
 }
@@ -443,10 +445,10 @@ class setting_dependency_disabledif_not_empty extends setting_dependency_disable
      */
     public function get_moodleform_properties() {
         return array(
-            'setting'=>$this->dependentsetting->get_ui_name(),
-            'dependenton'=>$this->setting->get_ui_name(),
-            'condition'=>'notequal',
-            'value'=>''
+            'setting' => $this->dependentsetting->get_ui_name(),
+            'dependenton' => $this->setting->get_ui_name(),
+            'condition' => 'notequal',
+            'value' => ''
         );
     }
 }
@@ -480,10 +482,10 @@ class setting_dependency_disabledif_empty extends setting_dependency_disabledif_
      */
     public function get_moodleform_properties() {
         return array(
-            'setting'=>$this->dependentsetting->get_ui_name(),
-            'dependenton'=>$this->setting->get_ui_name(),
-            'condition'=>'notequal',
-            'value'=>''
+            'setting' => $this->dependentsetting->get_ui_name(),
+            'dependenton' => $this->setting->get_ui_name(),
+            'condition' => 'notequal',
+            'value' => ''
         );
     }
 }
