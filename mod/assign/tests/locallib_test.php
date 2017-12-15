@@ -2656,6 +2656,58 @@ class mod_assign_locallib_testcase extends advanced_testcase {
     }
 
     /**
+     * Test student visibility when marking workflow is removed from an assignment.
+     */
+    public function test_markingworkflow_reset() {
+        global $PAGE, $DB;
+
+        // In this test, we are checking that grades are released
+        // if the assignment is updated to no longer use marking workflow.
+
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
+
+        $assign = $this->create_instance($course, [
+                'markingworkflow' => 1,
+            ]);
+        $PAGE->set_url(new moodle_url('/mod/assign/view.php', array('id' => $assign->get_course_module()->id)));
+
+        // Mark the submission and set to notmarked.
+        $this->setUser($teacher);
+        $data = new stdClass();
+        $data->grade = '50.0';
+        $data->workflowstate = ASSIGN_MARKING_WORKFLOW_STATE_NOTMARKED;
+        $assign->testable_apply_grade_to_user($data, $student->id, 0);
+
+        // Check the student can't see the grade.
+        $this->setUser($student);
+        $output = $assign->view_student_summary($student, true);
+        $this->assertEquals(false, strpos($output, '50.0'));
+
+        // Make sure the grade isn't pushed to the gradebook.
+        $grades = $assign->get_user_grades_for_gradebook($student->id);
+        $this->assertEmpty($grades);
+
+        $this->setUser($teacher);
+        $instance = $assign->get_instance();
+        $instance->instance = $instance->id;
+        $instance->markingworkflow = false;
+        $assign->update_instance($instance);
+
+        // Check the student can see the grade.
+        $this->setUser($student);
+        $output = $assign->view_student_summary($student, true);
+
+        $this->assertNotEquals(false, strpos($output, '50.0'));
+
+        // Make sure the grade is pushed to the gradebook.
+        $grades = $assign->get_user_grades_for_gradebook($student->id);
+        $this->assertEquals(50, (int)$grades[$student->id]->rawgrade);
+    }
+
+    /**
      * Test student visibility for each stage of the marking workflow.
      */
     public function test_markingworkflow() {
