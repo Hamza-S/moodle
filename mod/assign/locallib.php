@@ -4900,11 +4900,10 @@ class assign {
 
         $data = new stdClass();
         $adminconfig = $this->get_admin_config();
-        $requiresubmissionstatement = $this->get_instance()->requiresubmissionstatement &&
-                                       !empty($adminconfig->submissionstatement);
+        $requiresubmissionstatement = $this->get_instance()->requiresubmissionstatement;
 
         $submissionstatement = '';
-        if (!empty($adminconfig->submissionstatement)) {
+        if (!empty($adminconfig->submissionstatement) && !$this->get_instance()->teamsubmission) {
             // Format the submission statement before its sent. We turn off para because this is going within
             // a form element.
             $options = array(
@@ -4913,6 +4912,21 @@ class assign {
             );
             $submissionstatement = format_text($adminconfig->submissionstatement, FORMAT_MOODLE, $options);
         }
+        if (!empty($adminconfig->submissionstatementteamsubmissionallsubmit && $this->get_instance()->teamsubmission)) {
+            // Format the submission statement before its sent. We turn off para because this is going within
+            // a form element.
+            $options = array(
+                'context' => $this->get_context(),
+                'para' => false
+            );
+            $submissionstatement = format_text($adminconfig->submissionstatementteamsubmissionallsubmit, FORMAT_MOODLE, $options);
+        }
+        // If the the needed submission statement is empty, set $requiresubmissionstatement to false to prevent the
+        // checkbox from being displayed.
+        if (empty($submissionstatement)) {
+            $requiresubmissionstatement = false;
+        }
+
 
         if ($mform == null) {
             $mform = new mod_assign_confirm_submission_form(null, array($requiresubmissionstatement,
@@ -6289,11 +6303,10 @@ class assign {
         $instance = $this->get_instance();
         $data = new stdClass();
         $adminconfig = $this->get_admin_config();
-        $requiresubmissionstatement = $instance->requiresubmissionstatement &&
-                                       !empty($adminconfig->submissionstatement);
+        $requiresubmissionstatement = $instance->requiresubmissionstatement;
 
         $submissionstatement = '';
-        if (!empty($adminconfig->submissionstatement)) {
+        if (!empty($adminconfig->submissionstatement) && !$this->get_instance()->teamsubmission) {
             // Format the submission statement before its sent. We turn off para because this is going within
             // a form element.
             $options = array(
@@ -6302,6 +6315,21 @@ class assign {
             );
             $submissionstatement = format_text($adminconfig->submissionstatement, FORMAT_MOODLE, $options);
         }
+        if (!empty($adminconfig->submissionstatementteamsubmissionallsubmit && $this->get_instance()->teamsubmission)) {
+            // Format the submission statement before its sent. We turn off para because this is going within
+            // a form element.
+            $options = array(
+                'context' => $this->get_context(),
+                'para' => false
+            );
+            $submissionstatement = format_text($adminconfig->submissionstatementteamsubmissionallsubmit, FORMAT_MOODLE, $options);
+        }
+        // If the the needed submission statement is empty, set $requiresubmissionstatement to false to prevent the
+        // checkbox from being displayed.
+        if (empty($submissionstatement)) {
+            $requiresubmissionstatement = false;
+        }
+
 
         if ($mform == null) {
             $mform = new mod_assign_confirm_submission_form(null, array($requiresubmissionstatement,
@@ -7603,8 +7631,7 @@ class assign {
         // Submission statement.
         $adminconfig = $this->get_admin_config();
 
-        $requiresubmissionstatement = $this->get_instance()->requiresubmissionstatement &&
-                                       !empty($adminconfig->submissionstatement);
+        $requiresubmissionstatement = $this->get_instance()->requiresubmissionstatement;
 
         $draftsenabled = $this->get_instance()->submissiondrafts;
 
@@ -7612,14 +7639,26 @@ class assign {
         if ($requiresubmissionstatement && !$draftsenabled && $userid == $USER->id) {
 
             $submissionstatement = '';
-            if (!empty($adminconfig->submissionstatement)) {
-                // Format the submission statement before its sent. We turn off para because this is going within
-                // a form element.
-                $options = array(
-                    'context' => $this->get_context(),
-                    'para' => false
-                );
-                $submissionstatement = format_text($adminconfig->submissionstatement, FORMAT_MOODLE, $options);
+            if ($this->get_instance()->teamsubmission) {
+                if (!empty($adminconfig->submissionstatementteamsubmission)) {
+                    // Format the submission statement before its sent. We turn off para because this is going within
+                    // a form element.
+                    $options = array(
+                        'context' => $this->get_context(),
+                        'para' => false
+                    );
+                    $submissionstatement = format_text($adminconfig->submissionstatementteamsubmission, FORMAT_MOODLE, $options);
+                }
+            } else {
+                if (!empty($adminconfig->submissionstatement)) {
+                    // Format the submission statement before its sent. We turn off para because this is going within
+                    // a form element.
+                    $options = array(
+                        'context' => $this->get_context(),
+                        'para' => false
+                    );
+                    $submissionstatement = format_text($adminconfig->submissionstatement, FORMAT_MOODLE, $options);
+                }
             }
             $mform->addElement('checkbox', 'submissionstatement', '', $submissionstatement);
             $mform->addRule('submissionstatement', get_string('required'), 'required', null, 'client');
