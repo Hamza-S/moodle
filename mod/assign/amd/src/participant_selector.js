@@ -22,6 +22,7 @@
  */
 define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
 
+    var resultslimit = 100;
 
     return /** @alias module:mod_assign/participants_selector */ {
 
@@ -39,6 +40,15 @@ define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
         },
 
         /**
+         * Increase the number of users fetched in one trip.
+         *
+         * @method showMore
+         */
+        showMore: function() {
+            resultslimit *= 10;
+        },
+
+        /**
          * Fetch results based on the current query. This also renders each result from a template before returning them.
          *
          * @method transport
@@ -52,6 +62,7 @@ define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
             var groupid = $(selector).attr('data-groupid');
             var filters = $('[data-region="configure-filters"] input[type="checkbox"]');
             var filterstrings = [];
+            var showmore = false;
 
             filters.each(function(index, element) {
                 filterstrings[$(element).attr('name')] = $(element).prop('checked');
@@ -59,10 +70,18 @@ define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
 
             ajax.call([{
                 methodname: 'mod_assign_list_participants',
-                args: {assignid: assignmentid, groupid: groupid, filter: query, limit: 30, includeenrolments: false}
+                args: {assignid: assignmentid, groupid: groupid, filter: query, limit: resultslimit + 1, includeenrolments: false}
             }])[0].then(function(results) {
                 var promises = [];
                 var identityfields = $('[data-showuseridentity]').data('showuseridentity').split(',');
+
+                if (results.length == (resultslimit + 1)) {
+                    // Remove the last entry.
+                    // We do not show an error here because it would make the select list unusable.
+                    results.pop();
+                    showmore = true;
+                }
+
 
                 // We got the results, now we loop over them and render each one from a template.
                 $.each(results, function(index, user) {
@@ -106,7 +125,8 @@ define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
                     users = Array.prototype.slice.call(arguments);
                 }
 
-                success(users);
+                // Pass the showmore result to the autocomplete field.
+                success(users, showmore);
                 return;
             }).catch(failure);
         }
