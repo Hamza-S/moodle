@@ -673,7 +673,9 @@ class pix_icon implements renderable, templatable {
 
         // If the alt is empty, don't place it in the attributes, otherwise it will override parent alt text.
         if (!is_null($alt)) {
-            $this->attributes['alt'] = $alt;
+            // Convert HTML to text. We do not support HTML in icon alt text, it needs to be plain.
+            $alttext = content_to_text($alt, false);
+            $this->attributes['alt'] = $alttext;
 
             // If there is no title, set it to the attribute.
             if (!isset($this->attributes['title'])) {

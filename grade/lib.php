@@ -1763,14 +1763,19 @@ class grade_structure {
         // If element name is categorytotal, get the name of the parent category
         if ($strparams->itemname == get_string('categorytotal', 'grades')) {
             $parent = $element['object']->get_parent_category();
-            $strparams->category = $parent->get_name() . ' ';
+            $catparams = new stdClass();
+            $catparams->category = $parent->get_name(false);
+            $strparams->category = get_string('categorytotalfull', 'grades', $catparams);
+            // We overwrite the itemname in this case to prevent displaying it repeating
+            // the word "total" twice.
+            $strparams->itemname = '';
         } else {
             $strparams->category = '';
         }
 
         $strparams->itemmodule = null;
         if (isset($element['object']->itemmodule)) {
-            $strparams->itemmodule = $element['object']->itemmodule;
+            $strparams->itemmodule = get_string('modulename', $element['object']->itemmodule);
         }
         return $strparams;
     }
