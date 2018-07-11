@@ -894,9 +894,12 @@ class restore_update_availability extends restore_execution_step {
             }
             $section = $sectionsbyid[$rec->newitemid];
             if (!is_null($section->availability)) {
+                var_dump('update section after restore');
                 $info = new \core_availability\info_section($section);
                 $info->update_after_restore($this->get_restoreid(),
                         $this->get_courseid(), $this->get_logger(), $dateoffset, $this->task);
+            } else {
+                var_dump('SKIP ! update section after restore');
             }
         }
         $rs->close();
@@ -1607,6 +1610,8 @@ class restore_section_structure_step extends restore_structure_step {
             // Don't update availability (I didn't see a useful way to define
             // whether existing or new one should take precedence).
 
+            var_dump('UPDATE SECTION, SKIPPING AVAILABILITY');
+
             $DB->update_record('course_sections', $section);
             $newitemid = $secrec->id;
 
@@ -1717,6 +1722,7 @@ class restore_section_structure_step extends restore_structure_step {
 
             $section = new stdClass();
             $section->id = $availfield->coursesectionid;
+            var_dump('BAD BAD UPDATE SECTION, RANDOM AVAILABILITY');
             $section->availability = $newvalue;
             $section->timemodified = time();
             $DB->update_record('course_sections', $section);

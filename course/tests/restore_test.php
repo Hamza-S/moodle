@@ -237,6 +237,32 @@ class core_course_restore_testcase extends advanced_testcase {
         $this->assertEquals($startdate, $c2->startdate);
     }
 
+    public function test_restore_section_availability_in_new_course() {
+        global $DB;
+        $this->resetAfterTest();
+        $dg = $this->getDataGenerator();
+
+        $startdate = mktime(12, 0, 0, 7, 1, 2016); // 01-Jul-2016.
+
+        $c1 = $dg->create_course(['shortname' => 'SN', 'fullname' => 'FN', 'startdate' => $startdate,
+            'summary' => 'DESC', 'summaryformat' => FORMAT_MOODLE]);
+
+        // Add date availability condition not met for last section.
+        $tomorrow = time() + DAYSECS;
+        $availability = '{"op":"&","c":[{"type":"date","d":">=","t":' . $tomorrow . '}],"showc":[true]}';
+        $DB->set_field('course_sections', 'availability', $availability,
+                array('course' => $c1->id, 'section' => 3));
+        rebuild_course_cache($c1->id, true);
+        // Add availability to section 1.
+        $backupid = $this->backup_course($c1->id);
+
+        // The information is restored but adapted because names are already taken.
+        $c2 = $this->restore_to_new_course($backupid);
+        
+        var_dump($c2);
+        $this->assertEquals('1', '2');
+    }
+
     public function test_restore_course_info_in_existing_course() {
         global $DB;
         $this->resetAfterTest();

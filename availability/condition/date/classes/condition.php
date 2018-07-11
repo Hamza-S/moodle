@@ -273,6 +273,7 @@ class condition extends \core_availability\condition {
         // Adjust dates from all course sections.
         foreach ($modinfo->get_section_info_all() as $section) {
             if (!$section->availability) {
+                var_dump('SECTION HAS NO AVAILABILITY');
                 continue;
             }
 
@@ -282,6 +283,7 @@ class condition extends \core_availability\condition {
             $changed = false;
             foreach ($dates as $date) {
                 $date->time += $timeshift;
+                var_dump('DATE SHIFTED BY: ' . $timeshift);
                 $changed = true;
             }
 
