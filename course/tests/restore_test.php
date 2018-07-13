@@ -242,25 +242,32 @@ class core_course_restore_testcase extends advanced_testcase {
         $this->resetAfterTest();
         $dg = $this->getDataGenerator();
 
-        $startdate = mktime(12, 0, 0, 7, 1, 2016); // 01-Jul-2016.
+        $startdate1 = mktime(12, 0, 0, 7, 1, 2016); // 01-Jul-2016.
+        $startdate2 = mktime(12, 0, 0, 7, 1, 2017); // 01-Jul-2017.
 
-        $c1 = $dg->create_course(['shortname' => 'SN', 'fullname' => 'FN', 'startdate' => $startdate,
-            'summary' => 'DESC', 'summaryformat' => FORMAT_MOODLE]);
+        $c1 = $dg->create_course(['shortname' => 'SN1', 'fullname' => 'FN1', 'startdate' => $startdate1,
+            'summary' => 'DESC1', 'summaryformat' => FORMAT_MOODLE]);
+
+        $c2 = $dg->create_course(['shortname' => 'SN2', 'fullname' => 'FN2', 'startdate' => $startdate2,
+            'summary' => 'DESC2', 'summaryformat' => FORMAT_MOODLE]);
 
         // Add date availability condition not met for last section.
         $tomorrow = time() + DAYSECS;
+        // Add availability to section 3.
         $availability = '{"op":"&","c":[{"type":"date","d":">=","t":' . $tomorrow . '}],"showc":[true]}';
         $DB->set_field('course_sections', 'availability', $availability,
                 array('course' => $c1->id, 'section' => 3));
         rebuild_course_cache($c1->id, true);
-        // Add availability to section 1.
         $backupid = $this->backup_course($c1->id);
 
         // The information is restored but adapted because names are already taken.
-        $c2 = $this->restore_to_new_course($backupid);
+        $c2 = $this->restore_to_existing_course($backupid, $c2->id);
+
+        // The first problem to fix is that availability conditions are not created in a restore.
+        $restoredsection = $DB->get_record('course_sections', ['course' => $c2->id, 'section' => 3]);
         
-        var_dump($c2);
-        $this->assertEquals('1', '2');
+        $this->assertEquals($c1->startdate, $c2->startdate);
+        $this->assertEquals($availability, $restoredsection->availability);
     }
 
     public function test_restore_course_info_in_existing_course() {
