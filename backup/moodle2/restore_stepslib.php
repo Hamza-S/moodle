@@ -1609,6 +1609,18 @@ class restore_section_structure_step extends restore_structure_step {
 
             // Don't update availability (I didn't see a useful way to define
             // whether existing or new one should take precedence).
+            if (!empty($CFG->enableavailability)) { // Process availability information only if enabled.
+                // If any section availability conditions exist already, we must skip the ones from the backup.
+                if (is_null($secrec->availability)) {
+                    var_dump('BAD!');
+                    $section->availability = isset($data->availabilityjson) ? $data->availabilityjson : null;
+                    // Include legacy [<2.7] availability data if provided.
+                    if (is_null($section->availability)) {
+                        $section->availability = \core_availability\info::convert_legacy_fields(
+                                $data, true);
+                    }
+                }
+            }
 
             var_dump('UPDATE SECTION, SKIPPING AVAILABILITY');
 
