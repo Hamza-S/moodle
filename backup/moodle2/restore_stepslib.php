@@ -894,12 +894,9 @@ class restore_update_availability extends restore_execution_step {
             }
             $section = $sectionsbyid[$rec->newitemid];
             if (!is_null($section->availability)) {
-                var_dump('update section after restore');
                 $info = new \core_availability\info_section($section);
                 $info->update_after_restore($this->get_restoreid(),
                         $this->get_courseid(), $this->get_logger(), $dateoffset, $this->task);
-            } else {
-                var_dump('SKIP ! update section after restore');
             }
         }
         $rs->close();
@@ -1612,7 +1609,6 @@ class restore_section_structure_step extends restore_structure_step {
             if (!empty($CFG->enableavailability)) { // Process availability information only if enabled.
                 // If any section availability conditions exist already, we must skip the ones from the backup.
                 if (is_null($secrec->availability)) {
-                    var_dump('BAD!');
                     $section->availability = isset($data->availabilityjson) ? $data->availabilityjson : null;
                     // Include legacy [<2.7] availability data if provided.
                     if (is_null($section->availability)) {
@@ -1621,8 +1617,6 @@ class restore_section_structure_step extends restore_structure_step {
                     }
                 }
             }
-
-            var_dump('UPDATE SECTION, SKIPPING AVAILABILITY');
 
             $DB->update_record('course_sections', $section);
             $newitemid = $secrec->id;
@@ -1734,7 +1728,6 @@ class restore_section_structure_step extends restore_structure_step {
 
             $section = new stdClass();
             $section->id = $availfield->coursesectionid;
-            var_dump('BAD BAD UPDATE SECTION, RANDOM AVAILABILITY');
             $section->availability = $newvalue;
             $section->timemodified = time();
             $DB->update_record('course_sections', $section);

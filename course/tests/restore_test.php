@@ -237,7 +237,7 @@ class core_course_restore_testcase extends advanced_testcase {
         $this->assertEquals($startdate, $c2->startdate);
     }
 
-    public function test_restore_section_availability_in_new_course() {
+    public function test_restore_section_availability_in_existing_course() {
         global $DB;
         $this->resetAfterTest();
         $dg = $this->getDataGenerator();
@@ -252,10 +252,12 @@ class core_course_restore_testcase extends advanced_testcase {
             'summary' => 'DESC2', 'summaryformat' => FORMAT_MOODLE]);
 
         // Add date availability condition not met for last section.
-        $tomorrow = time() + DAYSECS;
+        $onedayfromc1 = $startdate1 + DAYSECS;
+        $onedayfromc2 = $startdate2 + DAYSECS;
         // Add availability to section 3.
-        $availability = '{"op":"&","c":[{"type":"date","d":">=","t":' . $tomorrow . '}],"showc":[true]}';
-        $DB->set_field('course_sections', 'availability', $availability,
+        $availability1 = '{"op":"&","c":[{"type":"date","d":">=","t":' . $onedayfromc1 . '}],"showc":[true]}';
+        $availability2 = '{"op":"&","c":[{"type":"date","d":">=","t":' . $onedayfromc2 . '}],"showc":[true]}';
+        $DB->set_field('course_sections', 'availability', $availability1,
                 array('course' => $c1->id, 'section' => 3));
         rebuild_course_cache($c1->id, true);
         $backupid = $this->backup_course($c1->id);
@@ -263,11 +265,11 @@ class core_course_restore_testcase extends advanced_testcase {
         // The information is restored but adapted because names are already taken.
         $c2 = $this->restore_to_existing_course($backupid, $c2->id);
 
-        // The first problem to fix is that availability conditions are not created in a restore.
+        // Ensure the availability condition is created on restore and dates are updated.
         $restoredsection = $DB->get_record('course_sections', ['course' => $c2->id, 'section' => 3]);
-        
+
         $this->assertEquals($c1->startdate, $c2->startdate);
-        $this->assertEquals($availability, $restoredsection->availability);
+        $this->assertEquals($availability2, $restoredsection->availability);
     }
 
     public function test_restore_course_info_in_existing_course() {
@@ -417,4 +419,56 @@ class core_course_restore_testcase extends advanced_testcase {
         $this->assertEquals($chat2->chattime, $restoredchat2->chattime);
         $this->assertEquals($c2->startdate + 1 * WEEKSECS, $restoredchat2->chattime);
     }
+
+    public function test_restore_course_availability_date_in_existing_course_without_permissions() {
+        global $DB;
+        $this->resetAfterTest();
+        $dg = $this->getDataGenerator();
+
+        $u1 = $dg->create_user();
+        $managers = get_archetype_roles('manager');
+        $manager = array_shift($managers);
+        $roleid = $this->create_role_with_caps('moodle/restore:rolldates', CAP_PROHIBIT);
+        $dg->role_assign($manager->id, $u1->id);
+        $dg->role_assign($roleid, $u1->id);
+
+        // Create two courses with different start dates.
+        // In each course make section 3 open 1 week after the course start date.
+        $startdate1 = mktime(12, 0, 0, 7, 1, 2016); // 01-Jul-2016.
+        $sectionstart1 = time() + DAYSECS;
+        $startdate2 = mktime(12, 0, 0, 1, 13, 2017); // 13-Jan-2017.
+        $sectionstart2 = time() + (DAYSECS * 7);
+        $c1 = $dg->create_course(['shortname' => 'SN', 'fullname' => 'FN', 'summary' => 'DESC', 'summaryformat' => FORMAT_MOODLE,
+            'startdate' => $startdate1]);
+        $c2 = $dg->create_course(['shortname' => 'A', 'fullname' => 'B', 'summary' => 'C', 'summaryformat' => FORMAT_PLAIN,
+            'startdate' => $startdate2]);
+
+        $availability1 = '{"op":"&","c":[{"type":"date","d":">=","t":' . $sectionstart1 . '}],"showc":[true]}';
+        $availability2 = '{"op":"&","c":[{"type":"date","d":">=","t":' . $sectionstart2 . '}],"showc":[true]}';
+        $DB->set_field('course_sections', 'availability', $availability1,
+                array('course' => $c1->id, 'section' => 3));
+        $DB->set_field('course_sections', 'availability', $availability2,
+                array('course' => $c2->id, 'section' => 3));
+        rebuild_course_cache($c1->id, true);
+        rebuild_course_cache($c2->id, true);
+
+        // The startdate does not change.
+        $backupid = $this->backup_course($c1->id);
+        var_dump('Run restore as user : ' . $u1->id);
+        $restored = $this->restore_to_existing_course($backupid, $c2->id, $u1->id);
+        var_dump('SO BAD!');
+        var_dump($startdate2);
+        var_dump($restored);
+        $this->assertEquals($startdate2, $restored->startdate);
+
+        $restoredsection = $DB->get_record('course_sections', ['course' => $c2->id, 'section' => 3]);
+        $restoredavailability = json_decode($restoredsection->availability);
+        // Verify that the availability date was not shifted during restore (the course date didn't change).
+        var_dump('CARROT');
+        var_dump($availability2);
+        var_dump($restoredsection->availability);
+        $this->assertEquals($sectionstart2, $restoredavailability->c[0]->t);
+    }
+
+
 }

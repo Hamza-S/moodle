@@ -140,7 +140,7 @@ abstract class restore_check {
                 throw new restore_controller_exception('restore_setting_value_wrong_for_capability', $a);
 
             } else { // Can apply changes
-                $userssetting->set_value(false);                              // Set the value to false
+                $userssetting->set_value(false);                              // Set the value to false.
                 $userssetting->set_status(base_setting::LOCKED_BY_PERMISSION);// Set the status to locked by perm
             }
         }

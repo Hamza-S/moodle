@@ -170,6 +170,7 @@ class restore_course_defaultcustom_setting extends restore_course_generic_settin
      */
     public function get_normalized_value() {
         $value = $this->get_value();
+
         if ($value === false && $this->get_ui() instanceof backup_setting_ui_defaultcustom) {
             $attributes = $this->get_ui()->get_attributes();
             return $attributes['defaultvalue'];
