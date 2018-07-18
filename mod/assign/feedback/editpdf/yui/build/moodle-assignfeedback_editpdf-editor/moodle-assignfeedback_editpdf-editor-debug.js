@@ -3811,6 +3811,21 @@ EDITOR.prototype = {
     },
 
     /**
+     * Display an error in a small part of the page (don't block everything).
+     *
+     * @param string The error text.
+     * @protected
+     * @method warning
+     */
+    warning: function(message) {
+        var drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
+
+        var warningelement = Y.Node.create('<div class="alert alert-warning" role="alert"></div>');
+        warningelement.setHTML(message);
+        drawingregion.prepend(warningelement);
+    },
+
+    /**
      * The info about all pages in the pdf has been returned.
      *
      * @param string The ajax response as text.
@@ -3818,7 +3833,8 @@ EDITOR.prototype = {
      * @method prepare_pages_for_display
      */
     prepare_pages_for_display: function(data) {
-        var i, j, comment, error;
+        var i, j, comment, error, annotation, readonly;
+
         if (!data.pagecount) {
             if (this.dialogue) {
                 this.dialogue.hide();
@@ -3844,9 +3860,15 @@ EDITOR.prototype = {
                                                                                  comment.rawtext);
             }
             for (j = 0; j < this.pages[i].annotations.length; j++) {
-                data = this.pages[i].annotations[j];
-                this.pages[i].annotations[j] = this.create_annotation(data.type, data);
+                annotation = this.pages[i].annotations[j];
+                this.pages[i].annotations[j] = this.create_annotation(annotation.type, annotation);
             }
+        }
+
+        readonly = this.get('readonly');
+        if (!readonly && data.partial) {
+            // Warn about non converted files, but only for teachers.
+            this.warning(M.util.get_string('partialwarning', 'assignfeedback_editpdf'));
         }
 
         // Update the ui.
@@ -4747,6 +4769,7 @@ M.assignfeedback_editpdf.editor.init = M.assignfeedback_editpdf.editor.init || f
         "querystring-stringify-simple",
         "moodle-core-notification-dialog",
         "moodle-core-notification-alert",
+        "moodle-core-notification-warning",
         "moodle-core-notification-exception",
         "moodle-core-notification-ajaxexception"
     ]
