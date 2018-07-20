@@ -43,7 +43,9 @@ var AJAXBASE = M.cfg.wwwroot + '/mod/assign/feedback/editpdf/ajax.php',
         COMMENTMENU: '.commentdrawable a',
         ANNOTATIONCOLOURBUTTON:  '.annotationcolourbutton',
         DELETEANNOTATIONBUTTON: '.deleteannotationbutton',
-        UNSAVEDCHANGESDIV: '.assignfeedback_editpdf_unsavedchanges',
+        WARNINGMESSAGECONTAINER: '.warningmessages',
+        ICONMESSAGECONTAINER: '.infoicon',
+        UNSAVEDCHANGESDIV: '.assignfeedback_editpdf_warningmessages',
         UNSAVEDCHANGESINPUT: 'input[name="assignfeedback_editpdf_haschanges"]',
         STAMPSBUTTON: '.currentstampbutton',
         DIALOGUE: '.' + CSS.DIALOGUE
@@ -3814,15 +3816,41 @@ EDITOR.prototype = {
      * Display an error in a small part of the page (don't block everything).
      *
      * @param string The error text.
+     * @param boolean dismissable Not critical messages can be removed after a short display.
      * @protected
      * @method warning
      */
-    warning: function(message) {
-        var drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
+    warning: function(message, dismissable) {
+        var icontemplate = this.get_dialogue_element(SELECTOR.ICONMESSAGECONTAINER);
+        var warningregion = this.get_dialogue_element(SELECTOR.WARNINGMESSAGECONTAINER);
+        var delay = 15, duration = 1;
+        var messageclasses = 'assignfeedback_editpdf_warningmessages alert alert-warning';
+        if (dismissable) {
+            delay = 4;
+            messageclasses = 'assignfeedback_editpdf_warningmessages alert alert-info';
+        }
+        var warningelement = Y.Node.create('<div class="' + messageclasses + '" role="alert"></div>');
 
-        var warningelement = Y.Node.create('<div class="alert alert-warning" role="alert"></div>');
-        warningelement.setHTML(message);
-        drawingregion.prepend(warningelement);
+        // Copy info icon template.
+        warningelement.append(icontemplate.one('*').cloneNode());
+
+        // Append the message.
+        warningelement.append(message);
+
+        // Add the entire warning to the container.
+        warningregion.prepend(warningelement);
+
+        // Remove the message after a short delay.
+        warningelement.transition(
+            {
+                duration: duration,
+                delay: delay,
+                opacity: 0
+            },
+            function() {
+                warningelement.remove();
+            }
+        );
     },
 
     /**
@@ -3868,7 +3896,7 @@ EDITOR.prototype = {
         readonly = this.get('readonly');
         if (!readonly && data.partial) {
             // Warn about non converted files, but only for teachers.
-            this.warning(M.util.get_string('partialwarning', 'assignfeedback_editpdf'));
+            this.warning(M.util.get_string('partialwarning', 'assignfeedback_editpdf'), false);
         }
 
         // Update the ui.
@@ -4454,6 +4482,7 @@ EDITOR.prototype = {
      * @method save_current_page
      */
     save_current_page: function() {
+        this.clear_warnings(false);
         if (this.get('destroyed')) {
             return;
         }
@@ -4481,16 +4510,9 @@ EDITOR.prototype = {
                         if (jsondata.error) {
                             return new M.core.ajaxException(jsondata);
                         }
+                        // Show warning that we have not saved the feedback.
                         Y.one(SELECTOR.UNSAVEDCHANGESINPUT).set('value', 'true');
-                        Y.one(SELECTOR.UNSAVEDCHANGESDIV).setStyle('opacity', 1);
-                        Y.one(SELECTOR.UNSAVEDCHANGESDIV).setStyle('display', 'inline-block');
-                        Y.one(SELECTOR.UNSAVEDCHANGESDIV).transition({
-                            duration: 1,
-                            delay: 2,
-                            opacity: 0
-                        }, function() {
-                            Y.one(SELECTOR.UNSAVEDCHANGESDIV).setStyle('display', 'none');
-                        });
+                        this.warning(M.util.get_string('draftchangessaved', 'assignfeedback_editpdf'), true);
                     } catch (e) {
                         return new M.core.exception(e);
                     }
@@ -4566,6 +4588,22 @@ EDITOR.prototype = {
     },
 
     /**
+     * Clear all current warning messages from display.
+     * @protected
+     * @method clear_warnings
+     * @param {Boolean} allwarnings If true, all previous warnings are removed.
+     */
+    clear_warnings: function(allwarnings) {
+        // Remove all warning messages, they may not relate to the current document or page anymore.
+        var warningregion = this.get_dialogue_element(SELECTOR.WARNINGMESSAGECONTAINER);
+        if (allwarnings) {
+            warningregion.empty();
+        } else {
+            warningregion.all('.alert-info').remove(true);
+        }
+    },
+
+    /**
      * Load the image for this pdf page and remove the loading icon (if there).
      * @protected
      * @method change_page
@@ -4631,6 +4669,7 @@ EDITOR.prototype = {
         pageselect.removeAttribute('disabled');
         pageselect.on('change', function() {
             this.currentpage = pageselect.get('value');
+            this.clear_warnings(false);
             this.change_page();
         }, this);
 
@@ -4654,6 +4693,7 @@ EDITOR.prototype = {
         if (this.currentpage < 0) {
             this.currentpage = 0;
         }
+        this.clear_warnings(false);
         this.change_page();
     },
 
@@ -4668,6 +4708,7 @@ EDITOR.prototype = {
         if (this.currentpage >= this.pages.length) {
             this.currentpage = this.pages.length - 1;
         }
+        this.clear_warnings(false);
         this.change_page();
     },
 
