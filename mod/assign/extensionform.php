@@ -57,6 +57,7 @@ class mod_assign_extension_form extends moodleform {
         $userlist = $params['userlist'];
         $usercount = 0;
         $usershtml = '';
+        var_dump($userlist);
 
         $extrauserfields = get_extra_user_fields($assign->get_context());
         foreach ($userlist as $userid) {
@@ -81,7 +82,11 @@ class mod_assign_extension_form extends moodleform {
 
         $listusersmessage = get_string('grantextensionforusers', 'assign', $userscount);
         $mform->addElement('header', 'general', $listusersmessage);
-        $mform->addElement('static', 'userslist', get_string('selectedusers', 'assign'), $usershtml);
+        if ($assign->is_blind_marking()) {
+            $mform->addElement('static', 'userslist', get_string('selectedusers', 'assign'), $usershtml);
+        } else {
+            $mform->addElement('static', 'userslist', get_string('selectedusers', 'assign'), $usershtml);
+        }
 
         if ($instance->allowsubmissionsfromdate) {
             $mform->addElement('static', 'allowsubmissionsfromdate', get_string('allowsubmissionsfromdate', 'assign'),
@@ -105,8 +110,9 @@ class mod_assign_extension_form extends moodleform {
         $mform->setType('id', PARAM_INT);
         $mform->addElement('hidden', 'userid');
         $mform->setType('userid', PARAM_INT);
-        $mform->addElement('hidden', 'selectedusers');
-        $mform->setType('selectedusers', PARAM_SEQUENCE);
+        $userfieldname = $assign->get_userid_list_field_name();
+        $mform->addElement('hidden', $userfieldname);
+        $mform->setType($userfieldname, PARAM_SEQUENCE);
         $mform->addElement('hidden', 'action', 'saveextension');
         $mform->setType('action', PARAM_ALPHA);
 

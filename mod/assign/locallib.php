@@ -254,6 +254,143 @@ class assign {
     }
 
     /**
+     * Look at the page request params and determine if a userid or blindid was passed.
+     * Resolve to an actual userid so we can process this request.
+     * We do not allow userid passed by useridlistid and rownum for this function
+     * because it can be affected by multiple concurrent requests and the action may
+     * happen on the wrong user.
+     *
+     * @param array $params The page request params. Optional.
+     * @return int userid
+     */
+    public function get_action_userid($params = [], $required = true) {
+
+        $userids = $this->get_action_userid_list($params);
+        $userid = 0;
+        if (count($userids)) {
+            $userid = array_shift($userids);
+        }
+        if (empty($userid) && $required) {
+            throw new coding_exception('User id was passed directly and blind marking is enabled.');
+        }
+
+        return $userid;
+    }
+
+    /**
+     * Return the value of the field used to carry a list of user ids.
+     */
+    public function get_userid_field_value($userid = 0) {
+        if (!$userid) {
+            $userid = $this->get_action_userid([], false);
+        }
+        if ($this->is_blind_marking()) {
+            return $this->get_uniqueid_for_user($userid);
+        } else {
+            return $userid;
+        }
+    }
+
+    /**
+     * Return the name of the field used to carry a list of user ids.
+     */
+    public function get_userid_field_name() {
+        if ($this->is_blind_marking()) {
+            return 'blindid';
+        } else {
+            return 'userid';
+        }
+    }
+
+    /**
+     * Return the name of the field used to carry a list of user ids.
+     */
+    public function get_userid_list_field_name() {
+        if ($this->is_blind_marking()) {
+            return 'selectedblindids';
+        } else {
+            return 'selectedusers';
+        }
+    }
+
+    /**
+     * Set the correct data for a form containing a list of user ids.
+     *
+     * @param stdClass $data The form data.
+     * @param array $userids The list of user ids.
+     */
+    public function set_action_userid_list($data, $userids) {
+        $data = (array)$data;
+        $fieldname = $this->get_userid_list_field_name();
+        if ($this->is_blind_marking()) {
+            $blindids = [];
+            foreach ($userids as $userid) {
+                array_push($blindids, $this->get_uniqueid_for_user($userid));
+            }
+            $data[$fieldname] = implode(',', $blindids);
+        } else {
+            $data[$fieldname] = implode(',', $userids);
+        }
+        return $data;
+    }
+
+    /**
+     * Look at the page request params and determine if a userid or blindid was passed.
+     * Resolve to an actual userid so we can process this request.
+     * We do not allow userid passed by useridlistid and rownum for this function
+     * because it can be affected by multiple concurrent requests and the action may
+     * happen on the wrong user.
+     *
+     * @param array $params The page request params. Optional.
+     * @return int userid
+     */
+    public function get_action_userid_list($params = []) {
+        // Allow stdClass or array.
+        $params = (array) $params;
+
+        // Get the params from the passed array, or the global request variables.
+        if (count($params) > 0) {
+            $userid = isset($params['userid']) ? $params['userid'] : 0;
+            $blindid = isset($params['blindid']) ? $params['blindid'] : 0;
+            $useridlist = isset($params['selectedusers']) ? $params['selectedusers'] : '';
+            $blindidlist = isset($params['selectedblindids']) ? $params['selectedblindids'] : '';
+        } else {
+            $userid = optional_param('userid', 0, PARAM_INT);
+            $blindid = optional_param('blindid', 0, PARAM_INT);
+            $useridlist = optional_param('selectedusers', '', PARAM_SEQUENCE);
+            $blindidlist = optional_param('selectedblindids', '', PARAM_SEQUENCE);
+        }
+
+        // Get the userids from the blindids if needed.
+        if ($this->is_blind_marking()) {
+            if ($blindid) {
+                $userid = $this->get_user_id_for_uniqueid($blindid);
+                $useridlist = array($userid);
+            } else {
+                $blindidlist = explode(',', $blindidlist);
+                $useridlist = [];
+                foreach ($blindidlist as $blindid) {
+                    $userid = $this->get_user_id_for_uniqueid($blindid);
+                    if ($userid) {
+                        array_push($useridlist, $userid);
+                    }
+                }
+            }
+        } else {
+            if ($userid) {
+                $useridlist = array($userid);
+            }
+        }
+
+        if (count($useridlist) == 0) {
+            throw new coding_exception('Improper use of the assignment class. ' .
+                                       'Parameter is required.');
+        }
+
+        return $useridlist;
+    }
+
+    /**
      * Based on the current assignment settings should we display the intro.
      *
      * @return bool showintro
@@ -464,7 +601,8 @@ class assign {
             $action = 'redirect';
             $nextpageparams['action'] = 'grading';
         } else if ($action == 'addattempt') {
-            $this->process_add_attempt(required_param('userid', PARAM_INT));
+            $userid = $this->get_action_userid();
+            $this->process_add_attempt($userid);
             $action = 'redirect';
             $nextpageparams['action'] = 'grading';
         } else if ($action == 'reverttodraft') {
@@ -2672,11 +2810,7 @@ class assign {
             'assign' => $this
         );
 
-        $users = optional_param('userid', 0, PARAM_INT);
-        if (!$users) {
-            $users = required_param('selectedusers', PARAM_SEQUENCE);
-        }
-        $userlist = explode(',', $users);
+        $userlist = $this->get_action_userid_list();
 
         $keys = array('duedate', 'cutoffdate', 'allowsubmissionsfromdate');
         $maxoverride = array('allowsubmissionsfromdate' => 0, 'duedate' => 0, 'cutoffdate' => 0);
@@ -2701,8 +2835,8 @@ class assign {
 
         $formparams['userlist'] = $userlist;
 
-        $data->selectedusers = $users;
-        $data->userid = 0;
+        $data = $this->set_action_userid_list($data, $userlist);
+        $data['userid'] = 0;
 
         if (empty($mform)) {
             $mform = new mod_assign_extension_form(null, $formparams);
@@ -4255,6 +4389,8 @@ class assign {
                                                                   'post',
                                                                   '',
                                                                   $classoptions);
+        // The userid field name changes depending on the assignment settings.
+        $useridlistfieldname = $this->get_userid_list_field_name();
 
         $batchformparams = array('cm'=>$cmid,
                                  'submissiondrafts'=>$this->get_instance()->submissiondrafts,
@@ -4263,7 +4399,8 @@ class assign {
                                  'feedbackplugins'=>$this->get_feedback_plugins(),
                                  'context'=>$this->get_context(),
                                  'markingworkflow'=>$markingworkflow,
-                                 'markingallocation'=>$markingallocation);
+                                 'markingallocation'=>$markingallocation,
+                                 'useridlistfieldname'=>$useridlistfieldname);
         $classoptions = array('class'=>'gradingbatchoperationsform');
 
         $gradingbatchoperationsform = new mod_assign_grading_batch_operations_form(null,
@@ -4361,12 +4498,7 @@ class assign {
 
         $o .= $this->get_renderer()->header();
 
-        $userid = optional_param('userid', 0, PARAM_INT);
-        $blindid = optional_param('blindid', 0, PARAM_INT);
-
-        if (!$userid && $blindid) {
-            $userid = $this->get_user_id_for_uniqueid($blindid);
-        }
+        $userid = $this->get_action_userid();
 
         $currentgroup = groups_get_activity_group($this->get_course_module(), true);
         $framegrader = new grading_app($userid, $currentgroup, $this);
@@ -4494,7 +4626,8 @@ class assign {
         $o = '';
         require_once($CFG->dirroot . '/mod/assign/submission_form.php');
         // Need submit permission to submit an assignment.
-        $userid = optional_param('userid', $USER->id, PARAM_INT);
+
+        $userid = $this->get_action_userid();
         $user = $DB->get_record('user', array('id'=>$userid), '*', MUST_EXIST);
 
         // This variation on the url will link direct to this student.
@@ -4679,7 +4812,8 @@ class assign {
                                  'feedbackplugins'=>$this->get_feedback_plugins(),
                                  'context'=>$this->get_context(),
                                  'markingworkflow'=>$this->get_instance()->markingworkflow,
-                                 'markingallocation'=>$markingallocation);
+                                 'markingallocation'=>$markingallocation,
+                                 'useridlistfieldname'=>$this->get_userid_list_field_name());
         $formclasses = array('class'=>'gradingbatchoperationsform');
         $mform = new mod_assign_grading_batch_operations_form(null,
                                                               $batchformparams,
@@ -4689,8 +4823,7 @@ class assign {
 
         if ($data = $mform->get_data()) {
             // Get the list of users.
-            $users = $data->selectedusers;
-            $userlist = explode(',', $users);
+            $userlist = $this->get_action_userid_list($data);
 
             $prefix = 'plugingradingbatchoperation_';
 
@@ -6259,7 +6392,10 @@ class assign {
 
         require_sesskey();
 
-        $userid = optional_param('userid', $USER->id, PARAM_INT);
+        $userid = $this->get_action_userid([], false);
+        if (!$userid) {
+            $userid = $USER->id;
+        }
 
         if (!$this->submissions_open($userid)) {
             $notices[] = get_string('submissionsclosed', 'assign');
@@ -6376,11 +6512,7 @@ class assign {
         require_once($CFG->dirroot . '/mod/assign/extensionform.php');
         require_sesskey();
 
-        $users = optional_param('userid', 0, PARAM_INT);
-        if (!$users) {
-            $users = required_param('selectedusers', PARAM_SEQUENCE);
-        }
-        $userlist = explode(',', $users);
+        $userlist = $this->get_action_userid_list();
 
         $keys = array('duedate', 'cutoffdate', 'allowsubmissionsfromdate');
         $maxoverride = array('allowsubmissionsfromdate' => 0, 'duedate' => 0, 'cutoffdate' => 0);
@@ -6416,18 +6548,14 @@ class assign {
         }
 
         if ($formdata = $mform->get_data()) {
-            if (!empty($formdata->selectedusers)) {
-                $users = explode(',', $formdata->selectedusers);
+            $users = $this->get_action_userid_list($formdata);
+            if (count($users) > 0) {
                 $result = true;
                 foreach ($users as $userid) {
                     $user = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);
                     $result = $this->save_user_extension($user->id, $formdata->extensionduedate) && $result;
                 }
                 return $result;
-            }
-            if (!empty($formdata->userid)) {
-                $user = $DB->get_record('user', array('id' => $formdata->userid), '*', MUST_EXIST);
-                return $this->save_user_extension($user->id, $formdata->extensionduedate);
             }
         }
 
@@ -7143,7 +7271,10 @@ class assign {
         // Include submission form.
         require_once($CFG->dirroot . '/mod/assign/submission_form.php');
 
-        $userid = optional_param('userid', $USER->id, PARAM_INT);
+        $userid = $this->get_action_userid([], false);
+        if (!$userid) {
+            $userid = $USER->id;
+        }
         // Need submit permission to submit an assignment.
         require_sesskey();
         if (!$this->submissions_open($userid)) {
@@ -7428,8 +7559,10 @@ class assign {
         $mform->setType('attemptnumber', PARAM_INT);
         $mform->addElement('hidden', 'ajax', optional_param('ajax', 0, PARAM_INT));
         $mform->setType('ajax', PARAM_INT);
-        $mform->addElement('hidden', 'userid', optional_param('userid', 0, PARAM_INT));
-        $mform->setType('userid', PARAM_INT);
+        $fieldname = $this->get_userid_field_name();
+        $fieldvalue = $this->get_userid_field_value();
+        $mform->addElement('hidden', $fieldname, $fieldvalue);
+        $mform->setType($fieldname, PARAM_INT);
 
         if ($this->get_instance()->teamsubmission) {
             $mform->addElement('header', 'groupsubmissionsettings', get_string('groupsubmissionsettings', 'assign'));
@@ -7632,8 +7765,10 @@ class assign {
         $mform->addElement('hidden', 'id', $this->get_course_module()->id);
         $mform->setType('id', PARAM_INT);
 
-        $mform->addElement('hidden', 'userid', $userid);
-        $mform->setType('userid', PARAM_INT);
+        $fieldname = $this->get_userid_field_name();
+        $fieldvalue = $this->get_userid_field_value($userid);
+        $mform->addElement('hidden', $fieldname, $fieldvalue);
+        $mform->setType($fieldname, PARAM_INT);
 
         $mform->addElement('hidden', 'action', 'savesubmission');
         $mform->setType('action', PARAM_ALPHA);
@@ -7695,7 +7830,7 @@ class assign {
         require_sesskey();
 
         if (!$userid) {
-            $userid = required_param('userid', PARAM_INT);
+            $userid = $this->get_action_userid();
         }
 
         return $this->revert_to_draft($userid);
@@ -7863,7 +7998,7 @@ class assign {
         require_sesskey();
 
         if (!$userid) {
-            $userid = required_param('userid', PARAM_INT);
+            $userid = $this->get_action_userid();
         }
 
         return $this->lock_submission($userid);
@@ -7912,7 +8047,7 @@ class assign {
         require_sesskey();
 
         if (!$userid) {
-            $userid = required_param('userid', PARAM_INT);
+            $userid = $this->get_action_userid();
         }
 
         return $this->unlock_submission($userid);
