@@ -91,6 +91,31 @@ var DRAWABLE = function(editor) {
     };
 
     /**
+     * Clip the drawable to the drawable page region.
+     * @public
+     * @method apply_clipping
+     * @param container
+     * @param x
+     * @param y
+     */
+    this.apply_clipping = function(container, x, y) {
+        var bounds = this.editor.get_canvas_bounds(true),
+            maxWidth = bounds.width - x,
+            maxHeight = bounds.height - y,
+            position = this.editor.get_window_coordinates(new M.assignfeedback_editpdf.point(x, y));
+
+        container.setStyles({
+            'position': 'absolute',
+            'maxWidth': maxWidth + 'px',
+            'maxHeight': maxHeight + 'px',
+            'overflow': 'hidden'
+        });
+        container.setX(position.x);
+        container.setY(position.y);
+        this.store_position(container, position.x, position.y);
+    };
+
+    /**
      * Store the initial position of the node, so it can be updated when the drawing canvas is scrolled
      * @public
      * @method store_position

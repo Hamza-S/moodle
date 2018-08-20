@@ -204,10 +204,9 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
         });
 
         drawingregion.append(container);
-        container.setStyle('position', 'absolute');
-        container.setX(position.x);
-        container.setY(position.y);
-        drawable.store_position(container, position.x, position.y);
+
+        drawable.apply_clipping(container, this.x, this.y);
+
         drawable.nodes.push(container);
         node.set('value', this.rawtext);
         scrollheight = node.get('scrollHeight');
@@ -391,7 +390,6 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
                     var x = e.clientX - node.getData('offsetx'),
                         y = e.clientY - node.getData('offsety'),
                         newlocation,
-                        windowlocation,
                         bounds;
 
                     if (node.getData('dragging') !== true) {
@@ -401,7 +399,9 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
                     }
 
                     newlocation = this.editor.get_canvas_coordinates(new M.assignfeedback_editpdf.point(x, y));
+                    // Clip the new position of the comment.
                     bounds = this.editor.get_canvas_bounds(true);
+
                     bounds.x = 0;
                     bounds.y = 0;
 
@@ -413,10 +413,7 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
                     this.x = newlocation.x;
                     this.y = newlocation.y;
 
-                    windowlocation = this.editor.get_window_coordinates(newlocation);
-                    container.setX(windowlocation.x);
-                    container.setY(windowlocation.y);
-                    this.drawable.store_position(container, windowlocation.x, windowlocation.y);
+                    this.drawable.apply_clipping(container, newlocation.x, newlocation.y);
                 }
             }, null, this);
             node.on('gesturemoveend', function() {
@@ -440,7 +437,6 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
                     var x = e.clientX - node.getData('offsetx'),
                         y = e.clientY - node.getData('offsety'),
                         newlocation,
-                        windowlocation,
                         bounds;
 
                     if (node.getData('dragging') !== true) {
@@ -451,6 +447,8 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
 
                     newlocation = this.editor.get_canvas_coordinates(new M.assignfeedback_editpdf.point(x, y));
                     bounds = this.editor.get_canvas_bounds(true);
+
+                    // Limit the position of the comment.
                     bounds.x = 0;
                     bounds.y = 0;
 
@@ -461,11 +459,7 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
 
                     this.x = newlocation.x;
                     this.y = newlocation.y;
-
-                    windowlocation = this.editor.get_window_coordinates(newlocation);
-                    container.setX(windowlocation.x);
-                    container.setY(windowlocation.y);
-                    this.drawable.store_position(container, windowlocation.x, windowlocation.y);
+                    this.drawable.apply_clipping(container, newlocation.x, newlocation.y);
                 }
             }, null, this);
             marker.on('gesturemoveend', function() {

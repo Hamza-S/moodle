@@ -383,7 +383,7 @@ EDITOR.prototype = {
                 bodyContent: this.get('body'),
                 footerContent: this.get('footer'),
                 modal: true,
-                width: '840px',
+                responsiveWidth: 4000,
                 visible: false,
                 draggable: true
             });
@@ -1107,7 +1107,7 @@ EDITOR.prototype = {
      * @method resize
      */
     resize: function() {
-        var drawingregion, drawregionheight;
+        var drawingregion, drawregionheight, drawregionwidth;
 
         if (this.dialogue) {
             if (!this.dialogue.get('visible')) {
@@ -1117,13 +1117,15 @@ EDITOR.prototype = {
         }
 
         // Make sure the dialogue box is not bigger than the max height of the viewport.
-        drawregionheight = Y.one('body').get('winHeight') - 120; // Space for toolbar + titlebar.
-        if (drawregionheight < 100) {
-            drawregionheight = 100;
-        }
+        drawregionheight = Y.one('body').get('winHeight') - 210; // Space for toolbar + titlebar.
+        drawregionheight = Math.min(Math.max(drawregionheight, 100), 760);
+        drawregionwidth = Y.one('body').get('winWidth') - 50; // Space for left and right padding.
+        drawregionwidth = Math.min(Math.max(drawregionwidth, 100), 860);
+
         drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
         if (this.dialogue) {
             drawingregion.setStyle('maxHeight', drawregionheight + 'px');
+            drawingregion.setStyle('maxWidth', drawregionwidth + 'px');
         }
         this.redraw();
         return true;
@@ -1298,6 +1300,8 @@ EDITOR.prototype = {
         page = this.pages[this.currentpage];
         this.loadingicon.hide();
         drawingcanvas.setStyle('backgroundImage', 'url("' + page.url + '")');
+        this.graphic.set('width', page.width);
+        this.graphic.set('height', page.height);
         drawingcanvas.setStyle('width', page.width + 'px');
         drawingcanvas.setStyle('height', page.height + 'px');
 

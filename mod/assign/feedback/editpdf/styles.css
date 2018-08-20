@@ -19,7 +19,11 @@
 }
 
 .assignfeedback_editpdf_widget .moodle-dialogue-bd .drawingregion {
-    position: inherit;
+    position: relative;
+    margin-bottom: 10px;
+    top: 0;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .assignfeedback_editpdf_widget .drawingregion[data-currenttool=drag] .drawingcanvas {
@@ -37,8 +41,6 @@
 
 .assignfeedback_editpdf_widget .drawingregion {
     border: 1px solid #ccc;
-    left: 1em;
-    right: 1em;
     top: 52px;
     bottom: 0;
     position: absolute;
@@ -386,7 +388,6 @@ ul.assignfeedback_editpdf_menu {
     .assignfeedback_editpdf_widget .pageheader {
         height: 104px;
     }
-
     .assignfeedback_editpdf_widget .drawingregion {
         top: 104px;
     }
@@ -396,7 +397,6 @@ ul.assignfeedback_editpdf_menu {
     .assignfeedback_editpdf_widget .drawingregion {
         position: relative;
         margin-bottom: 1em;
-        top: 0;
     }
 
     .assignfeedback_editpdf_widget .pageheader {

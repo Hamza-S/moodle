@@ -493,6 +493,31 @@ var DRAWABLE = function(editor) {
     };
 
     /**
+     * Clip the drawable to the drawable page region.
+     * @public
+     * @method apply_clipping
+     * @param container
+     * @param x
+     * @param y
+     */
+    this.apply_clipping = function(container, x, y) {
+        var bounds = this.editor.get_canvas_bounds(true),
+            maxWidth = bounds.width - x,
+            maxHeight = bounds.height - y,
+            position = this.editor.get_window_coordinates(new M.assignfeedback_editpdf.point(x, y));
+
+        container.setStyles({
+            'position': 'absolute',
+            'maxWidth': maxWidth + 'px',
+            'maxHeight': maxHeight + 'px',
+            'overflow': 'hidden'
+        });
+        container.setX(position.x);
+        container.setY(position.y);
+        this.store_position(container, position.x, position.y);
+    };
+
+    /**
      * Store the initial position of the node, so it can be updated when the drawing canvas is scrolled
      * @public
      * @method store_position
@@ -1567,24 +1592,23 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
         var drawable = new M.assignfeedback_editpdf.drawable(this.editor),
             drawingregion = this.editor.get_dialogue_element(SELECTOR.DRAWINGREGION),
             node,
-            position;
+            width = (this.endx - this.x),
+            height = (this.endy - this.y);
 
-        position = this.editor.get_window_coordinates(new M.assignfeedback_editpdf.point(this.x, this.y));
         node = Y.Node.create('<div/>');
         node.setStyles({
             'position': 'absolute',
             'display': 'inline-block',
             'backgroundImage': 'url(' + this.editor.get_stamp_image_url(this.path) + ')',
-            'width': (this.endx - this.x),
-            'height': (this.endy - this.y),
-            'backgroundSize': '100% 100%',
+            'width': width + 'px',
+            'height': height + 'px',
+            'backgroundSize': width + 'px ' + height + 'px',
             'zIndex': 50
         });
 
         drawingregion.append(node);
-        node.setX(position.x);
-        node.setY(position.y);
-        drawable.store_position(node, position.x, position.y);
+
+        drawable.apply_clipping(node, this.x, this.y);
 
         // Bind events only when editing.
         if (!this.editor.get('readonly')) {
@@ -1611,11 +1635,9 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
         var bounds = new M.assignfeedback_editpdf.rect(),
             drawable = new M.assignfeedback_editpdf.drawable(this.editor),
             drawingregion = this.editor.get_dialogue_element(SELECTOR.DRAWINGREGION),
-            node,
-            position;
+            node;
 
         bounds.bound([edit.start, edit.end]);
-        position = this.editor.get_window_coordinates(new M.assignfeedback_editpdf.point(bounds.x, bounds.y));
 
         node = Y.Node.create('<div/>');
         node.setStyles({
@@ -1624,14 +1646,12 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
             'backgroundImage': 'url(' + this.editor.get_stamp_image_url(edit.stamp) + ')',
             'width': bounds.width,
             'height': bounds.height,
-            'backgroundSize': '100% 100%',
+            'backgroundSize': bounds.width + 'px ' + bounds.height + 'px',
             'zIndex': 50
         });
 
         drawingregion.append(node);
-        node.setX(position.x);
-        node.setY(position.y);
-        drawable.store_position(node, position.x, position.y);
+        drawable.apply_clipping(node, bounds.x, bounds.y);
 
         drawable.nodes.push(node);
 
@@ -2581,10 +2601,9 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
         });
 
         drawingregion.append(container);
-        container.setStyle('position', 'absolute');
-        container.setX(position.x);
-        container.setY(position.y);
-        drawable.store_position(container, position.x, position.y);
+
+        drawable.apply_clipping(container, this.x, this.y);
+
         drawable.nodes.push(container);
         node.set('value', this.rawtext);
         scrollheight = node.get('scrollHeight');
@@ -2768,7 +2787,6 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
                     var x = e.clientX - node.getData('offsetx'),
                         y = e.clientY - node.getData('offsety'),
                         newlocation,
-                        windowlocation,
                         bounds;
 
                     if (node.getData('dragging') !== true) {
@@ -2778,7 +2796,9 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
                     }
 
                     newlocation = this.editor.get_canvas_coordinates(new M.assignfeedback_editpdf.point(x, y));
+                    // Clip the new position of the comment.
                     bounds = this.editor.get_canvas_bounds(true);
+
                     bounds.x = 0;
                     bounds.y = 0;
 
@@ -2790,10 +2810,7 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
                     this.x = newlocation.x;
                     this.y = newlocation.y;
 
-                    windowlocation = this.editor.get_window_coordinates(newlocation);
-                    container.setX(windowlocation.x);
-                    container.setY(windowlocation.y);
-                    this.drawable.store_position(container, windowlocation.x, windowlocation.y);
+                    this.drawable.apply_clipping(container, newlocation.x, newlocation.y);
                 }
             }, null, this);
             node.on('gesturemoveend', function() {
@@ -2817,7 +2834,6 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
                     var x = e.clientX - node.getData('offsetx'),
                         y = e.clientY - node.getData('offsety'),
                         newlocation,
-                        windowlocation,
                         bounds;
 
                     if (node.getData('dragging') !== true) {
@@ -2828,6 +2844,8 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
 
                     newlocation = this.editor.get_canvas_coordinates(new M.assignfeedback_editpdf.point(x, y));
                     bounds = this.editor.get_canvas_bounds(true);
+
+                    // Limit the position of the comment.
                     bounds.x = 0;
                     bounds.y = 0;
 
@@ -2838,11 +2856,7 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
 
                     this.x = newlocation.x;
                     this.y = newlocation.y;
-
-                    windowlocation = this.editor.get_window_coordinates(newlocation);
-                    container.setX(windowlocation.x);
-                    container.setY(windowlocation.y);
-                    this.drawable.store_position(container, windowlocation.x, windowlocation.y);
+                    this.drawable.apply_clipping(container, newlocation.x, newlocation.y);
                 }
             }, null, this);
             marker.on('gesturemoveend', function() {
@@ -3656,7 +3670,7 @@ EDITOR.prototype = {
                 bodyContent: this.get('body'),
                 footerContent: this.get('footer'),
                 modal: true,
-                width: '840px',
+                responsiveWidth: 4000,
                 visible: false,
                 draggable: true
             });
@@ -4380,7 +4394,7 @@ EDITOR.prototype = {
      * @method resize
      */
     resize: function() {
-        var drawingregion, drawregionheight;
+        var drawingregion, drawregionheight, drawregionwidth;
 
         if (this.dialogue) {
             if (!this.dialogue.get('visible')) {
@@ -4390,13 +4404,15 @@ EDITOR.prototype = {
         }
 
         // Make sure the dialogue box is not bigger than the max height of the viewport.
-        drawregionheight = Y.one('body').get('winHeight') - 120; // Space for toolbar + titlebar.
-        if (drawregionheight < 100) {
-            drawregionheight = 100;
-        }
+        drawregionheight = Y.one('body').get('winHeight') - 210; // Space for toolbar + titlebar.
+        drawregionheight = Math.min(Math.max(drawregionheight, 100), 760);
+        drawregionwidth = Y.one('body').get('winWidth') - 50; // Space for left and right padding.
+        drawregionwidth = Math.min(Math.max(drawregionwidth, 100), 860);
+
         drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
         if (this.dialogue) {
             drawingregion.setStyle('maxHeight', drawregionheight + 'px');
+            drawingregion.setStyle('maxWidth', drawregionwidth + 'px');
         }
         this.redraw();
         return true;
@@ -4571,6 +4587,8 @@ EDITOR.prototype = {
         page = this.pages[this.currentpage];
         this.loadingicon.hide();
         drawingcanvas.setStyle('backgroundImage', 'url("' + page.url + '")');
+        this.graphic.set('width', page.width);
+        this.graphic.set('height', page.height);
         drawingcanvas.setStyle('width', page.width + 'px');
         drawingcanvas.setStyle('height', page.height + 'px');
 

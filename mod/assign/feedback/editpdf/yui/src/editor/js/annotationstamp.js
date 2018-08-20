@@ -45,24 +45,23 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
         var drawable = new M.assignfeedback_editpdf.drawable(this.editor),
             drawingregion = this.editor.get_dialogue_element(SELECTOR.DRAWINGREGION),
             node,
-            position;
+            width = (this.endx - this.x),
+            height = (this.endy - this.y);
 
-        position = this.editor.get_window_coordinates(new M.assignfeedback_editpdf.point(this.x, this.y));
         node = Y.Node.create('<div/>');
         node.setStyles({
             'position': 'absolute',
             'display': 'inline-block',
             'backgroundImage': 'url(' + this.editor.get_stamp_image_url(this.path) + ')',
-            'width': (this.endx - this.x),
-            'height': (this.endy - this.y),
-            'backgroundSize': '100% 100%',
+            'width': width + 'px',
+            'height': height + 'px',
+            'backgroundSize': width + 'px ' + height + 'px',
             'zIndex': 50
         });
 
         drawingregion.append(node);
-        node.setX(position.x);
-        node.setY(position.y);
-        drawable.store_position(node, position.x, position.y);
+
+        drawable.apply_clipping(node, this.x, this.y);
 
         // Bind events only when editing.
         if (!this.editor.get('readonly')) {
@@ -89,11 +88,9 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
         var bounds = new M.assignfeedback_editpdf.rect(),
             drawable = new M.assignfeedback_editpdf.drawable(this.editor),
             drawingregion = this.editor.get_dialogue_element(SELECTOR.DRAWINGREGION),
-            node,
-            position;
+            node;
 
         bounds.bound([edit.start, edit.end]);
-        position = this.editor.get_window_coordinates(new M.assignfeedback_editpdf.point(bounds.x, bounds.y));
 
         node = Y.Node.create('<div/>');
         node.setStyles({
@@ -102,14 +99,12 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
             'backgroundImage': 'url(' + this.editor.get_stamp_image_url(edit.stamp) + ')',
             'width': bounds.width,
             'height': bounds.height,
-            'backgroundSize': '100% 100%',
+            'backgroundSize': bounds.width + 'px ' + bounds.height + 'px',
             'zIndex': 50
         });
 
         drawingregion.append(node);
-        node.setX(position.x);
-        node.setY(position.y);
-        drawable.store_position(node, position.x, position.y);
+        drawable.apply_clipping(node, bounds.x, bounds.y);
 
         drawable.nodes.push(node);
 
