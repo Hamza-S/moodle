@@ -2436,5 +2436,26 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2018090700.03);
     }
 
+    if ($oldversion < 2018090700.04) {
+        // Remove any duplicate rows - from now on adding contacts just requires 1 row.
+        // The person who made the contact request (userid) and the person who approved
+        // it (contactid). Upgrade the table so that the first person to add the contact
+        // was the one who made the request.
+        $sql = "SELECT c1.id
+                  FROM {message_contacts} c1
+            INNER JOIN {message_contacts} c2
+                    ON c1.userid = c2.contactid
+                   AND c1.contactid = c2.userid
+                 WHERE c1.id > c2.id";
+        if ($contacts = $DB->get_records_sql($sql)) {
+            list($insql, $inparams) = $DB->get_in_or_equal(array_keys($contacts));
+            $deletesql = "DELETE FROM {message_contacts} WHERE id $insql";
+
+            $DB->execute($deletesql, $inparams);
+        }
+
+        upgrade_main_savepoint(true, 2018090700.04);
+    }
+
     return true;
 }
