@@ -119,6 +119,11 @@ information provided here is intended especially for developers.
   - phone1
   - phone2
   - address
+* The following events have been deprecated and should not be used any more:
+  - message_contact_blocked
+  - message_contact_unblocked
+  The reason for this is because you can now block/unblock users without them necessarily being a contact. These events have been
+  replacted with message_user_blocked and message_user_unblocked respectively.
 
 === 3.5 ===
 
