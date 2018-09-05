@@ -200,6 +200,12 @@ class tests_finder {
             case 'behat':
                 $regexp = '!'.$sep.'tests'.$sep.'behat'.$sep.'(.*\.feature)|(behat_.*\.php)$!';
                 break;
+            case 'ariautil':
+                $regexp = '!'.$sep.'tests'.$sep.'aria'.$sep.'(util\.js)$!';
+                break;
+            case 'aria':
+                $regexp = '!'.$sep.'tests'.$sep.'aria'.$sep.'(.*_test\.js)$!';
+                break;
         }
 
         return $regexp;
