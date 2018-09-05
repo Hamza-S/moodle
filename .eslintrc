@@ -209,6 +209,18 @@
         'no-unused-vars': 'error',
         'no-implicit-globals': 'error'
       }
+    },
+    {
+      files: ["**/aria/*.js"],
+      // Check Accessibility tests against current javascript engine
+      rules: {
+        'no-unused-vars': 'error',
+        'no-undef': 'off',
+        'camelcase': 'off'
+      },
+      'parserOptions': {
+        'ecmaVersion': 2017
+      }
     }
   ]
 }
