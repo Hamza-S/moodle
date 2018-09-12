@@ -25,7 +25,18 @@
 
 define(['jquery', 'core/ajax', 'core/templates'], function($, Ajax, Templates) {
 
+    var resultslimit = 100;
+
     return /** @alias module:enrol_manual/form-potential-user-selector */ {
+
+        /**
+         * Increase the number of users fetched in one trip.
+         *
+         * @method showMore
+         */
+        showMore: function() {
+            resultslimit *= 10;
+        },
 
         processResults: function(selector, results) {
             var users = [];
@@ -40,6 +51,7 @@ define(['jquery', 'core/ajax', 'core/templates'], function($, Ajax, Templates) {
 
         transport: function(selector, query, success, failure) {
             var promise;
+            var showmore = false;
             var courseid = $(selector).attr('courseid');
             if (typeof courseid === "undefined") {
                 courseid = '1';
@@ -57,13 +69,20 @@ define(['jquery', 'core/ajax', 'core/templates'], function($, Ajax, Templates) {
                     search: query,
                     searchanywhere: true,
                     page: 0,
-                    perpage: 30
+                    perpage: (resultslimit + 1)
                 }
             }]);
 
             promise[0].then(function(results) {
                 var promises = [],
                     i = 0;
+
+                if (results.length == (resultslimit + 1)) {
+                    // Remove the last entry.
+                    // We do not show an error here because it would make the select list unusable.
+                    results.pop();
+                    showmore = true;
+                }
 
                 // Render the label.
                 $.each(results, function(index, user) {
@@ -86,7 +105,8 @@ define(['jquery', 'core/ajax', 'core/templates'], function($, Ajax, Templates) {
                         user._label = args[i];
                         i++;
                     });
-                    success(results);
+                    // Pass the showmore result to the autocomplete field.
+                    success(results, showmore);
                     return;
                 });
 
