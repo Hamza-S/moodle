@@ -121,6 +121,15 @@ information provided here is intended especially for developers.
   - phone1
   - phone2
   - address
+* The gradebook now supports the ability to accept files as feedback. This can be achieved by adding
+  'feedbackfiles' to the $grades parameter passed to grade_update().
+    For example -
+        $grades['feedbackfiles'] = [
+            'contextid' => 1,
+            'component' => 'mod_xyz',
+            'filearea' => 'mod_xyz_feedback',
+            'itemid' => 2
+        ];
 
 === 3.5 ===
 
