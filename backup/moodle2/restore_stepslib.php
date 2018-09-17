@@ -270,6 +270,14 @@ class restore_gradebook_structure_step extends restore_structure_step {
             } else {
                 $newitemid = $DB->insert_record('grade_grades', $data);
                 $this->set_mapping('grade_grades', $oldid, $newitemid);
+
+                $this->add_related_files(
+                    'grade',
+                    'feedback',
+                    'id',
+                    null,
+                    $oldid
+                );
             }
         } else {
             $message = "Mapped user id not found for user id '{$olduserid}', grade item id '{$data->itemid}'";
@@ -732,6 +740,7 @@ class restore_grade_history_structure_step extends restore_structure_step {
         global $DB;
 
         $data = (object)($data);
+        $oldhistoryid = $data->id;
         $olduserid = $data->userid;
         unset($data->id);
 
@@ -743,6 +752,14 @@ class restore_grade_history_structure_step extends restore_structure_step {
             $data->usermodified = $this->get_mappingid('user', $data->usermodified, null);
             $data->rawscaleid = $this->get_mappingid('scale', $data->rawscaleid);
             $DB->insert_record('grade_grades_history', $data);
+
+            $this->add_related_files(
+                'grade',
+                'history',
+                'id',
+                null,
+                $oldhistoryid
+            );
         } else {
             $message = "Mapped user id not found for user id '{$olduserid}', grade item id '{$data->itemid}'";
             $this->log($message, backup::LOG_DEBUG);
@@ -3720,6 +3737,14 @@ class restore_activity_grades_structure_step extends restore_structure_step {
             $grade = new grade_grade($data, false);
             $grade->insert('restore');
             $this->set_mapping('grade_grades', $oldid, $grade->id);
+
+            $this->add_related_files(
+                'grade',
+                'feedback',
+                'id',
+                null,
+                $oldid
+            );
         } else {
             debugging("Mapped user id not found for user id '{$olduserid}', grade item id '{$data->itemid}'");
         }
@@ -3797,6 +3822,7 @@ class restore_activity_grade_history_structure_step extends restore_structure_st
         global $DB;
 
         $data = (object) $data;
+        $oldhistoryid = $data->id;
         $olduserid = $data->userid;
         unset($data->id);
 
@@ -3808,12 +3834,19 @@ class restore_activity_grade_history_structure_step extends restore_structure_st
             $data->usermodified = $this->get_mappingid('user', $data->usermodified, null);
             $data->rawscaleid = $this->get_mappingid('scale', $data->rawscaleid);
             $DB->insert_record('grade_grades_history', $data);
+
+            $this->add_related_files(
+                'grade',
+                'history',
+                'id',
+                null,
+                $oldhistoryid
+            );
         } else {
             $message = "Mapped user id not found for user id '{$olduserid}', grade item id '{$data->itemid}'";
             $this->log($message, backup::LOG_DEBUG);
         }
     }
-
 }
 
 /**
