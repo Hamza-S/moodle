@@ -269,12 +269,12 @@ class restore_gradebook_structure_step extends restore_structure_step {
                 $this->log($message, backup::LOG_DEBUG);
             } else {
                 $newitemid = $DB->insert_record('grade_grades', $data);
-                $this->set_mapping('grade_grades', $oldid, $newitemid);
+                $this->set_mapping('grade_grades', $oldid, $newitemid, true);
 
                 $this->add_related_files(
                     'grade',
                     'feedback',
-                    'id',
+                    'grade_grades',
                     null,
                     $oldid
                 );
@@ -751,12 +751,14 @@ class restore_grade_history_structure_step extends restore_structure_step {
             $data->oldid = $this->get_mappingid('grade_grades', $data->oldid);
             $data->usermodified = $this->get_mappingid('user', $data->usermodified, null);
             $data->rawscaleid = $this->get_mappingid('scale', $data->rawscaleid);
-            $DB->insert_record('grade_grades_history', $data);
 
+            $newhistoryid = $DB->insert_record('grade_grades_history', $data);
+
+            $this->set_mapping('grade_grades_history', $oldhistoryid, $newhistoryid, true);
             $this->add_related_files(
                 'grade',
                 'history',
-                'id',
+                'grade_grades_history',
                 null,
                 $oldhistoryid
             );
@@ -3736,12 +3738,12 @@ class restore_activity_grades_structure_step extends restore_structure_step {
 
             $grade = new grade_grade($data, false);
             $grade->insert('restore');
-            $this->set_mapping('grade_grades', $oldid, $grade->id);
 
+            $this->set_mapping('grade_grades', $oldid, $grade->id, true);
             $this->add_related_files(
                 'grade',
                 'feedback',
-                'id',
+                'grade_grades',
                 null,
                 $oldid
             );
@@ -3833,12 +3835,13 @@ class restore_activity_grade_history_structure_step extends restore_structure_st
             $data->oldid = $this->get_mappingid('grade_grades', $data->oldid);
             $data->usermodified = $this->get_mappingid('user', $data->usermodified, null);
             $data->rawscaleid = $this->get_mappingid('scale', $data->rawscaleid);
-            $DB->insert_record('grade_grades_history', $data);
+            $newhistoryid = $DB->insert_record('grade_grades_history', $data);
+            $this->set_mapping('grade_grades_history', $oldhistoryid, $newhistoryid, true);
 
             $this->add_related_files(
                 'grade',
                 'history',
-                'id',
+                'grade_grades_history',
                 null,
                 $oldhistoryid
             );

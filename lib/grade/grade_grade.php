@@ -1052,7 +1052,7 @@ class grade_grade extends grade_object {
 
         // We only support feedback files for modules atm.
         if ($this->grade_item && $this->grade_item->is_external_item()) {
-            $context = context_course::instance($this->grade_item->courseid);
+            $context = $this->get_context();
             $this->copy_feedback_files($context, GRADE_FEEDBACK_FILEAREA, $this->id);
 
             if (empty($CFG->disablegradehistory)) {
@@ -1101,7 +1101,7 @@ class grade_grade extends grade_object {
 
         // We only support feedback files for modules atm.
         if ($this->grade_item && $this->grade_item->is_external_item()) {
-            $context = context_course::instance($this->grade_item->courseid);
+            $context = $this->get_context();
 
             $fs = new file_storage();
             $fs->delete_area_files($context->id, GRADE_FILE_COMPONENT, GRADE_FEEDBACK_FILEAREA, $this->id);
@@ -1242,5 +1242,14 @@ class grade_grade extends grade_object {
                 }
             }
         }
+    }
+
+    /**
+     * Determine the correct context for this grade_grade.
+     *
+     * @return context
+     */
+    public function get_context() {
+        return $this->grade_item->get_context();
     }
 }

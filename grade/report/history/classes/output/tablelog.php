@@ -314,10 +314,16 @@ class tablelog extends \table_sql implements \renderable {
         if ($this->is_downloading()) {
             return $history->feedback;
         } else {
+            // We need the activity context, not the course context.
+            $gradegrade = new \grade_grade();
+            $gradegrade->itemid = $history->itemid;
+            $gradeitem = $gradegrade->load_grade_item();
+            $context = $gradeitem->get_context();
+
             $feedback = file_rewrite_pluginfile_urls(
                 $history->feedback,
                 'pluginfile.php',
-                $this->context->id,
+                $context->id,
                 GRADE_FILE_COMPONENT,
                 GRADE_HISTORY_FILEAREA,
                 $history->id

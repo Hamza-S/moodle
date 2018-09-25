@@ -688,7 +688,7 @@ class grade_report_user extends grade_report {
                     if ($grade_grade->feedback) {
                         $grade_grade->feedback = grade_rewrite_feedback_files_urls(
                             $grade_grade->feedback,
-                            $this->context,
+                            $grade_grade->get_context(),
                             $grade_grade
                         );
                     }
