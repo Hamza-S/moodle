@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot.'/user/lib.php');
+require_once($CFG->libdir.'/externallib.php');
 
 /**
  * Unit tests for user lib api.
@@ -792,6 +793,56 @@ class core_userliblib_testcase extends advanced_testcase {
         self::assertSame($CFG->theme, $got['theme']);
         self::assertSame('50', $got['timezone']);
         self::assertSame('0', $got['mailformat']);
+    }
+
+    /**
+     * Test we only update user_lastaccess when a user views a course.
+     */
+    public function test_user_lastaccess() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        // Create a course.
+        $course = self::getDataGenerator()->create_course();
+
+        $student1 = self::getDataGenerator()->create_user();
+        $student2 = self::getDataGenerator()->create_user();
+        // Enrol the students.
+        self::getDataGenerator()->enrol_user($student1->id, $course->id);
+        self::getDataGenerator()->enrol_user($student2->id, $course->id);
+
+        // Set current user.
+        $this->setUser($student1);
+
+        $lastaccess = ['userid' => $student1->id];
+        // We haven't viewed the course yet.
+        $empty = $DB->get_record('user_lastaccess', $lastaccess);
+        $this->assertEmpty($empty, 'There should not be an access log.');
+
+        $coursecontext = context_course::instance($course->id);
+        external_api::validate_context($coursecontext);
+
+        // We still haven't accessed the course, we just checked the
+        // context.
+        $empty = $DB->get_record('user_lastaccess', $lastaccess);
+        $this->assertEmpty($empty, 'There should not be an access log.');
+
+        require_login($course);
+        // Now we have accessed the course.
+        $notempty = $DB->get_record('user_lastaccess', $lastaccess);
+        $this->assertNotEmpty($notempty, 'There should be an access log');
+        $this->assertEquals($notempty->courseid, $course->id, 'The course should match');
+
+        // Set current user.
+        $this->setUser($student2);
+        // This user called the course_view function directly (webservice).
+        course_view($coursecontext);
+        $lastaccess = ['userid' => $student2->id];
+        $notempty = $DB->get_record('user_lastaccess', $lastaccess);
+        $this->assertNotEmpty($notempty, 'There should be an access log');
+        $this->assertEquals($notempty->courseid, $course->id, 'The course should match');
+
     }
 
     /**
