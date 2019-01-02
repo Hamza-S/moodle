@@ -1,4 +1,11 @@
 <?xml version="1.0"?>
 <libraries>
     <!-- Accessibility extensions for mathjax were briefly included - and then removed again -->
+  <library>
+    <location>xyjax</location>
+    <name>XyJax</name>
+    <license>Apache</license>
+    <version>0.1</version>
+    <licenseversion>2.0</licenseversion>
+  </library>
 </libraries>

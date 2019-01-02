@@ -93,6 +93,31 @@ class filter_mathjaxloader extends moodle_text_filter {
             $page->requires->js_module($moduleconfig);
 
             $config = get_config('filter_mathjaxloader', 'mathjaxconfig');
+            $xyjaxenabled = get_config('filter_mathjaxloader', 'xyjaxenabled');
+            $mhchemenabled = get_config('filter_mathjaxloader', 'mhchemenabled');
+
+            $extensions = [];
+            $extras = [];
+            $tex = '';
+
+            if ($xyjaxenabled) {
+                array_push($extensions, '"{wwwroot}/filter/mathjaxloader/xyjax/xypic.js"');
+            }
+            if ($mhchemenabled) {
+                array_push($extensions, '"mhchem.js"');
+                array_push($extras, 'mhchem: { legacy: false }');
+            }
+
+            if (!empty($extensions)) {
+                $tex .= "\n" . 'MathJax.Hub.Config({ TeX: { extensions: [' . implode($extensions, ', ') . ']';
+                if (!empty($extras)) {
+                    $tex .= ', ' . implode($extras, ', ');
+                }
+                $tex .= '}});';
+            }
+
+            $config = $config . $tex;
+
             $wwwroot = new moodle_url('/');
 
             $config = str_replace('{wwwroot}', $wwwroot->out(true), $config);

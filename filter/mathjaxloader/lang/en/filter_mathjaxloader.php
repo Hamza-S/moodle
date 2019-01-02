@@ -41,4 +41,8 @@ This can be useful to save on bandwidth or because of local proxy restrictions.
 To use a local installation of MathJax, first download the full MathJax library from http://www.mathjax.org/. Then install it on a web server. Finally update the MathJax filter settings httpurl and/or httpsurl to point to the local MathJax.js URL.';
 $string['mathjaxsettings'] = 'MathJax configuration';
 $string['mathjaxsettings_desc'] = 'The default MathJax configuration should be appropriate for most users, but MathJax is highly configurable and any of the standard MathJax configuration options can be added here.';
+$string['mhchemenabled'] = 'Enable mhchem plugin for MathJax';
+$string['mhchemenabled_help'] = 'Include additional settings to enable the mhchem plugin for MathJax. mhchem from https://github.com/mhchem/MathJax-mhchem is used to write chemical equations.';
+$string['xyjaxenabled'] = 'Enable xyjax plugin for MathJax';
+$string['xyjaxenabled_help'] = 'Include additional settings to enable the XyJax plugin for MathJax. XyJax from http://sonoisa.github.io/xyjax/xyjax.html is used to draw graphs and diagrams.';
 $string['privacy:metadata'] = 'The MathJax plugin does not store any personal data.';

@@ -146,7 +146,38 @@ if ($ADMIN->fulltree) {
                                                 $default);
     $settings->add($setting);
 
-    // Group 4
+    // Group 5
+    $name = new lang_string('librarygroup5', 'atto_equation');
+    $desc = new lang_string('librarygroup5_desc', 'atto_equation');
+    $default = '
+\ce{ CrO4^2- }
+\ce{ CO2 + C -> 2CO }
+\ce{ ^{227}_{90}Th+ }
+\ce{ CO2 + C ->[\text{above}][\text{below}] 2CO }
+';
+    $setting = new admin_setting_configtextarea('atto_equation/librarygroup5',
+                                                $name,
+                                                $desc,
+                                                $default);
+    $settings->add($setting);
+
+    // Group 6
+    $name = new lang_string('librarygroup6', 'atto_equation');
+    $desc = new lang_string('librarygroup6_desc', 'atto_equation');
+    $default = '
+\xymatrix{ A \ar@/^/[r]\ar@/_/[r] & B}
+\xymatrix{ A \ar @{=>}[r]^f &B}
+\xymatrix{ A\rtwocell^f_g{\alpha} & B}
+\xymatrix{ A\ar[d]\\\\ B}
+\xymatrix{ A \ar[d]^b \ar[r]^a &B\ar[d]^c\\\\ C \ar[r]^d &D}
+';
+    $setting = new admin_setting_configtextarea('atto_equation/librarygroup6',
+                                                $name,
+                                                $desc,
+                                                $default);
+    $settings->add($setting);
+
+    // Group 4 (comes last on purpose).
     $name = new lang_string('librarygroup4', 'atto_equation');
     $desc = new lang_string('librarygroup4_desc', 'atto_equation');
     $default = '

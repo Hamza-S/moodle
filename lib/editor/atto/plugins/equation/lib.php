@@ -39,7 +39,9 @@ function atto_equation_strings_for_js() {
                                           'librarygroup1',
                                           'librarygroup2',
                                           'librarygroup3',
-                                          'librarygroup4'),
+                                          'librarygroup4',
+                                          'librarygroup5',
+                                          'librarygroup6'),
                                     'atto_equation');
 }
 
@@ -76,11 +78,24 @@ function atto_equation_params_for_js($elementid, $options, $fpoptions) {
             'group3' => array(
                 'groupname' => 'librarygroup3',
                 'elements' => get_config('atto_equation', 'librarygroup3'),
-            ),
-            'group4' => array(
-                'groupname' => 'librarygroup4',
-                'elements' => get_config('atto_equation', 'librarygroup4'),
             ));
+    if (get_config('filter_mathjaxloader', 'mhchemenabled')) {
+        $library['group5'] = array(
+            'groupname' => 'librarygroup5',
+            'elements' => get_config('atto_equation', 'librarygroup5')
+        );
+    };
+
+    if (get_config('filter_mathjaxloader', 'xyjaxenabled')) {
+        $library['group6'] = array(
+            'groupname' => 'librarygroup6',
+            'elements' => get_config('atto_equation', 'librarygroup6'),
+        );
+    }
+    $library['group4'] = array(
+        'groupname' => 'librarygroup4',
+        'elements' => get_config('atto_equation', 'librarygroup4'),
+    );
 
     return array('texfilteractive' => $texfilteractive,
                  'contextid' => $context->id,

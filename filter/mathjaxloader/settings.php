@@ -51,6 +51,17 @@ MathJax.Hub.Config({
     messageStyle: "none"
 });
 ';
+    $item = new admin_setting_configcheckbox('filter_mathjaxloader/mhchemenabled',
+                                             new lang_string('mhchemenabled', 'filter_mathjaxloader'),
+                                             new lang_string('mhchemenabled_help', 'filter_mathjaxloader'),
+                                             0);
+    $settings->add($item);
+
+    $item = new admin_setting_configcheckbox('filter_mathjaxloader/xyjaxenabled',
+                                             new lang_string('xyjaxenabled', 'filter_mathjaxloader'),
+                                             new lang_string('xyjaxenabled_help', 'filter_mathjaxloader'),
+                                             0);
+    $settings->add($item);
 
     $item = new admin_setting_configtextarea('filter_mathjaxloader/mathjaxconfig',
                                              new lang_string('mathjaxsettings','filter_mathjaxloader'),
