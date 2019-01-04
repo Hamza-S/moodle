@@ -15904,6 +15904,10 @@ body:not(.jsenabled) .langmenu:hover > .dropdown-menu,
 ol {
   margin: 0 0 10px 2.5em;
 }
+a[href]:not(:disabled):not(.disabled),
+a[tabindex]:not(:disabled):not(.disabled) {
+  cursor: pointer;
+}
 body {
   padding-top: 60px;
 }
