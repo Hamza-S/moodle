@@ -16560,6 +16560,13 @@ body:not(.jsenabled) .langmenu:hover > .dropdown-menu,
 .active.carousel-item-left {
   transform: translateX(-100%); }
 
+/*
+ * Mouse cursor even for javascript links
+ */
+a[href]:not(:disabled):not(.disabled),
+a[tabindex]:not(:disabled):not(.disabled) {
+  cursor: pointer; }
+
 body.behat-site .fixed-top {
   position: absolute; }
 

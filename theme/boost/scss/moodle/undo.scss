@@ -185,3 +185,13 @@ body:not(.jsenabled) .langmenu:hover > .dropdown-menu,
 .active.carousel-item-left {
     transform: translateX(-100%);
 }
+
+/*
+ * Mouse cursor even for javascript links
+ */
+a[href],
+a[tabindex] {
+    &:not(:disabled):not(.disabled) {
+        cursor: pointer;
+    }
+}
