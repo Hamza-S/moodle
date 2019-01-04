@@ -66,7 +66,7 @@ Feature: Notification popover unread notifications
     # Open the popover.
     And I open the notification popover
     # Click the mark all as read button.
-    And I click on "Mark all as read" "link" in the "#nav-notification-popover-container" "css_element"
+    And I click on "Mark all as read" "icon" in the "#nav-notification-popover-container" "css_element"
     # Refresh the page to make sure we send a new request for the unread count.
     And I reload the page
     # Confirm the count element is hidden (i.e. there are no unread notifications).

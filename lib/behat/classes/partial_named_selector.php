@@ -199,6 +199,16 @@ XPATH
         , 'autocomplete_suggestions' => <<<XPATH
 .//ul[contains(concat(' ', normalize-space(@class), ' '), concat(' ', 'form-autocomplete-suggestions', ' '))]/li[@role='option'][contains(normalize-space(.), %locator%)]
 XPATH
+        , 'link' => <<<XPATH
+.//a
+[./@href][(%linkMatch% or %imgAltMatch%)]
+|
+.//a
+[./@tabindex][(%linkMatch% or %imgAltMatch%)]
+|
+.//*
+[%lowercaseRole% = 'link'][(%idOrValueMatch% or %titleMatch% or %tagTextMatch%)]
+XPATH
     );
 
     protected static $customselectors = [
