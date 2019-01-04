@@ -21,7 +21,7 @@
 </div>
 <div class="profile" data-userid="{{userid}}" data-region="profile">
     <div class="user-container">
-        <a data-action="profile-view" href="#">
+        <a data-action="profile-view" tabindex="0">
             <img class="profile-picture" src="{{profileimageurl}}"
                  alt="{{#str}}pictureof, moodle, {{fullname}}{{/str}}"
                  title="{{#str}}pictureof, moodle, {{fullname}}{{/str}}" />
@@ -43,22 +43,22 @@
     </div>
     <div class="actions">
         <div class="separator">
-            <a data-action="profile-send-message" href="#">{{#str}}sendmessage, message{{/str}}</a>
+            <a data-action="profile-send-message" tabindex="0">{{#str}}sendmessage, message{{/str}}</a>
         </div>
         <div class="separator">
             {{#isblocked}}
-                <a data-action="profile-unblock-contact" href="#">{{#str}}unblockcontact, message{{/str}}</a>
+                <a data-action="profile-unblock-contact" tabindex="0">{{#str}}unblockcontact, message{{/str}}</a>
             {{/isblocked}}
             {{^isblocked}}
-                <a class="danger" data-action="profile-block-contact" href="#">{{#str}}blockcontact, message{{/str}}</a>
+                <a class="danger" data-action="profile-block-contact" tabindex="0">{{#str}}blockcontact, message{{/str}}</a>
             {{/isblocked}}
         </div>
         <div class="separator">
             {{#iscontact}}
-                <a class="danger" data-action="profile-remove-contact" href="#">{{#str}}removecontact, message{{/str}}</a>
+                <a class="danger" data-action="profile-remove-contact" tabindex="0">{{#str}}removecontact, message{{/str}}</a>
             {{/iscontact}}
             {{^iscontact}}
-                <a data-action="profile-add-contact" href="#">{{#str}}addcontact, message{{/str}}</a>
+                <a data-action="profile-add-contact" tabindex="0">{{#str}}addcontact, message{{/str}}</a>
             {{/iscontact}}
         </div>
     </div>
