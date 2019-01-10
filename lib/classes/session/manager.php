@@ -588,6 +588,31 @@ class manager {
     }
 
     /**
+     * Return the number of seconds remaining in the current session.
+     * @param string $sid
+     */
+    public static function time_remaining($sid) {
+        global $DB, $CFG;
+
+        if (empty($CFG->version)) {
+            // Not installed yet, do not try to access database.
+            return 0;
+        }
+
+        // Note: add sessions->state checking here if it gets implemented.
+        if (!$record = $DB->get_record('sessions', array('sid' => $sid), 'id, userid, timemodified')) {
+            return 0;
+        }
+
+        if (empty($record->userid) or isguestuser($record->userid)) {
+            // Ignore guest and not-logged-in timeouts, there is very little risk here.
+            return $CFG->sessiontimeout;
+        } else {
+            return $CFG->sessiontimeout - (time() - $record->timemodified);
+        }
+    }
+
+    /**
      * Fake last access for given session, this prevents session timeout.
      * @param string $sid
      */
