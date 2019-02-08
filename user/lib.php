@@ -28,6 +28,7 @@ define('USER_FILTER_LAST_ACCESS', 3);
 define('USER_FILTER_ROLE', 4);
 define('USER_FILTER_STATUS', 5);
 define('USER_FILTER_STRING', 6);
+define('USER_FILTER_COHORT', 7);
 
 /**
  * Creates a user
@@ -1294,7 +1295,7 @@ function user_get_tagged_users($tag, $exclusivemode = false, $fromctx = 0, $ctx 
  * @return array
  */
 function user_get_participants_sql($courseid, $groupid = 0, $accesssince = 0, $roleid = 0, $enrolid = 0, $statusid = -1,
-                                   $search = '', $additionalwhere = '', $additionalparams = array()) {
+                                   $search = '', $additionalwhere = '', $additionalparams = array(), $cohortid = 0) {
     global $DB, $USER, $CFG;
 
     // Get the context.
@@ -1361,6 +1362,12 @@ function user_get_participants_sql($courseid, $groupid = 0, $accesssince = 0, $r
 
         $wheres[] = "u.id IN (SELECT userid FROM {role_assignments} WHERE roleid = :roleid AND contextid $relatedctxsql)";
         $params = array_merge($params, array('roleid' => $roleid), $relatedctxparams);
+    }
+
+    // Limit list to users in this cohort.
+    if ($cohortid) {
+        $joins[] = "JOIN {cohort_members} chm ON chm.userid = u.id AND chm.cohortid = :cohortid";
+        $params['cohortid'] = $cohortid;
     }
 
     if (!empty($search)) {
@@ -1486,11 +1493,10 @@ function user_get_participants_sql($courseid, $groupid = 0, $accesssince = 0, $r
  * @return int
  */
 function user_get_total_participants($courseid, $groupid = 0, $accesssince = 0, $roleid = 0, $enrolid = 0, $statusid = -1,
-                                     $search = '', $additionalwhere = '', $additionalparams = array()) {
+                                     $search = '', $additionalwhere = '', $additionalparams = array(), $cohortid = 0) {
     global $DB;
-
     list($select, $from, $where, $params) = user_get_participants_sql($courseid, $groupid, $accesssince, $roleid, $enrolid,
-        $statusid, $search, $additionalwhere, $additionalparams);
+        $statusid, $search, $additionalwhere, $additionalparams, $cohortid);
 
     return $DB->count_records_sql("SELECT COUNT(u.id) $from $where", $params);
 }
@@ -1513,11 +1519,11 @@ function user_get_total_participants($courseid, $groupid = 0, $accesssince = 0, 
  * @return moodle_recordset
  */
 function user_get_participants($courseid, $groupid = 0, $accesssince, $roleid, $enrolid = 0, $statusid, $search,
-                               $additionalwhere = '', $additionalparams = array(), $sort = '', $limitfrom = 0, $limitnum = 0) {
+                               $additionalwhere = '', $additionalparams = array(), $sort = '', $limitfrom = 0, $limitnum = 0, $cohortid = 0) {
     global $DB;
 
     list($select, $from, $where, $params) = user_get_participants_sql($courseid, $groupid, $accesssince, $roleid, $enrolid,
-        $statusid, $search, $additionalwhere, $additionalparams);
+        $statusid, $search, $additionalwhere, $additionalparams, $cohortid);
 
     return $DB->get_recordset_sql("$select $from $where $sort", $params, $limitfrom, $limitnum);
 }

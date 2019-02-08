@@ -251,6 +251,15 @@ class core_user_renderer extends plugin_renderer_base {
             }
         }
 
+        // Cohorts.
+        $cohorts = cohort_get_available_cohorts($context, 0, 0, 0);
+        $cohortoptions = [];
+        $criteria = get_string('cohort', 'cohort');
+        foreach ($cohorts as $cohort) {
+            $cohortoptions += $this->format_filter_option(USER_FILTER_COHORT, $criteria, $cohort->id, $cohort->name);
+        }
+        $filteroptions += $cohortoptions;
+
         // Add missing applied filters to the filter options.
         $filteroptions = $this->handle_missing_applied_filters($filtersapplied, $filteroptions);
 

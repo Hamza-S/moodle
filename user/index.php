@@ -40,6 +40,7 @@ $courseid     = optional_param('id', 0, PARAM_INT); // This are required.
 $newcourse    = optional_param('newcourse', false, PARAM_BOOL);
 $selectall    = optional_param('selectall', false, PARAM_BOOL); // When rendering checkboxes against users mark them all checked.
 $roleid       = optional_param('roleid', 0, PARAM_INT);
+$cohortid     = optional_param('cohortid', 0, PARAM_INT);
 $groupparam   = optional_param('group', 0, PARAM_INT);
 
 $PAGE->set_url('/user/index.php', array(
@@ -114,6 +115,14 @@ if ($roleid) {
         $roleid = 0;
     }
 }
+if ($cohortid) {
+    if (cohort_can_view_cohort($cohortid, $context)) {
+        $filtersapplied[] = USER_FILTER_COHORT . ':' . $cohortid;
+    } else {
+        $cohortid = 0;
+    }
+}
+
 
 // Default group ID.
 $groupid = false;
@@ -165,6 +174,9 @@ foreach ($filtersapplied as $filter) {
             break;
         case USER_FILTER_ROLE:
             $roleid = $value;
+            break;
+        case USER_FILTER_COHORT:
+            $cohortid = $value;
             break;
         case USER_FILTER_STATUS:
             // We only accept active/suspended statuses.
@@ -229,7 +241,7 @@ foreach (array_unique($filtersapplied) as $filterix => $filter) {
     $baseurl->param('unified-filters[' . $filterix . ']', $filter);
 }
 $participanttable = new \core_user\participants_table($course->id, $groupid, $lastaccess, $roleid, $enrolid, $status,
-    $searchkeywords, $bulkoperations, $selectall);
+    $searchkeywords, $bulkoperations, $selectall, $cohortid);
 $participanttable->define_baseurl($baseurl);
 
 // Do this so we can get the total number of rows.

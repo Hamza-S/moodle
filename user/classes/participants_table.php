@@ -65,6 +65,11 @@ class participants_table extends \table_sql {
     protected $roleid;
 
     /**
+     * @var int $cohortid The cohort we are filtering. 0 means no filter.
+     */
+    protected $cohortid;
+
+    /**
      * @var int $enrolid The applied filter for the user enrolment ID.
      */
     protected $enrolid;
@@ -143,10 +148,11 @@ class participants_table extends \table_sql {
      * @param int $status The applied filter for the user's enrolment status.
      * @param string|array $search The search string(s)
      * @param bool $bulkoperations Is the user allowed to perform bulk operations?
+     * @param int $cohortid Filter by this cohort.
      * @param bool $selectall Has the user selected all users on the page?
      */
     public function __construct($courseid, $currentgroup, $accesssince, $roleid, $enrolid, $status, $search,
-            $bulkoperations, $selectall) {
+            $bulkoperations, $selectall, $cohortid) {
         global $CFG;
 
         parent::__construct('user-index-participants-' . $courseid);
@@ -225,6 +231,7 @@ class participants_table extends \table_sql {
         $this->currentgroup = $currentgroup;
         $this->accesssince = $accesssince;
         $this->roleid = $roleid;
+        $this->cohortid = $cohortid;
         $this->search = $search;
         $this->enrolid = $enrolid;
         $this->status = $status;
@@ -439,7 +446,7 @@ class participants_table extends \table_sql {
         list($twhere, $tparams) = $this->get_sql_where();
 
         $total = user_get_total_participants($this->course->id, $this->currentgroup, $this->accesssince,
-            $this->roleid, $this->enrolid, $this->status, $this->search, $twhere, $tparams);
+            $this->roleid, $this->enrolid, $this->status, $this->search, $twhere, $tparams, $this->cohortid);
 
         $this->pagesize($pagesize, $total);
 
@@ -450,7 +457,7 @@ class participants_table extends \table_sql {
 
         $rawdata = user_get_participants($this->course->id, $this->currentgroup, $this->accesssince,
             $this->roleid, $this->enrolid, $this->status, $this->search, $twhere, $tparams, $sort, $this->get_page_start(),
-            $this->get_page_size());
+            $this->get_page_size(), $this->cohortid);
         $this->rawdata = [];
         foreach ($rawdata as $user) {
             $this->rawdata[$user->id] = $user;
