@@ -322,4 +322,7 @@ function xmldb_main_install() {
 
     // Add built-in prediction models.
     \core_analytics\manager::add_builtin_models();
+
+    require_once($CFG->libdir . '/badgeslib.php');
+    badges_install_default_backpacks();
 }

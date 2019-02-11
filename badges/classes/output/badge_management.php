@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,24 +15,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * MOODLE VERSION INFORMATION
- *
- * This file defines the current version of the core Moodle code being used.
- * This is compared against the values stored in the database to determine
- * whether upgrades should be performed (see lib/db/*.php)
+ * Issued badge renderable.
  *
  * @package    core
- * @copyright  1999 onwards Martin Dougiamas (http://dougiamas.com)
+ * @subpackage badges
+ * @copyright  2012 onwards Totara Learning Solutions Ltd {@link http://www.totaralms.com/}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author     Yuliya Bozhko <yuliya.bozhko@totaralms.com>
  */
+
+namespace core_badges\output;
 
 defined('MOODLE_INTERNAL') || die();
 
-$version  = 2018120303.14;              // 20181203      = branching date YYYYMMDD - do not modify!
-                                        //         RR    = release increments - 00 in DEV branches.
-                                        //           .XX = incremental changes.
+require_once($CFG->libdir . '/badgeslib.php');
 
-$release  = '3.6.3+ (Build: 20190418)'; // Human-friendly version name
+use renderable;
 
-$branch   = '36';                       // This version's branch.
-$maturity = MATURITY_STABLE;             // This version's maturity level.
+/**
+ * Collection of badges used at the index.php page
+ *
+ * @copyright  2012 onwards Totara Learning Solutions Ltd {@link http://www.totaralms.com/}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class badge_management extends badge_collection implements renderable {
+}
+
