@@ -148,3 +148,7 @@ selectnotestate,core_notes
 extendenrol,core
 groupextendenrol,core
 virusfounduser,core_antivirus
+backpackbadges,core_badges
+nobackpackbadges,core_badges
+nobackpackcollections,core_badges
+error:nogroups,core_badges

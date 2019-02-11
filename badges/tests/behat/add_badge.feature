@@ -11,8 +11,8 @@ Feature: Add badges to the system
   @javascript
   Scenario: Setting badges settings
     Given I navigate to "Badges settings" node in "Site administration > Badges"
-    And I set the field "Default badge issuer name" to "Test Badge Site"
-    And I set the field "Default badge issuer contact details" to "testuser@example.com"
+    And I set the field "Badge issuer name" to "Test Badge Site"
+    And I set the field "Badge issuer email address" to "testuser@example.com"
     And I press "Save changes"
     And I follow "Badges"
     When I follow "Add a new badge"
