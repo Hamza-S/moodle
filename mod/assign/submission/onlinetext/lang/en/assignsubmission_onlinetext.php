@@ -41,6 +41,8 @@ $string['privacy:metadata:submissionpurpose'] = 'The submission ID that links to
 $string['privacy:metadata:tablepurpose'] = 'Stores the text submission for each attempt.';
 $string['privacy:metadata:textpurpose'] = 'The actual text submitted for this attempt of the assignment.';
 $string['privacy:path'] = 'Submission Text';
+$string['template'] = 'Online text submission template';
+$string['template_help'] = 'The starting template for a new online text submission.';
 $string['wordlimit'] = 'Word limit';
 $string['wordlimit_help'] = 'If online text submissions are enabled, this is the maximum number ' .
         'of words that each student will be allowed to submit.';
