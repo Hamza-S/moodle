@@ -69,6 +69,9 @@ class assign_submission_onlinetext extends assign_submission_plugin {
 
         $defaultwordlimit = $this->get_config('wordlimit') == 0 ? '' : $this->get_config('wordlimit');
         $defaultwordlimitenabled = $this->get_config('wordlimitenabled');
+        $defaulttemplatetext = $this->get_config('template_text');
+        $defaulttemplateformat = $this->get_config('template_format');
+
 
         $options = array('size' => '6', 'maxlength' => '6');
         $name = get_string('wordlimit', 'assignsubmission_onlinetext');
@@ -101,6 +104,20 @@ class assign_submission_onlinetext extends assign_submission_plugin {
         $mform->hideIf('assignsubmission_onlinetext_wordlimit_group',
                        'assignsubmission_onlinetext_enabled',
                        'notchecked');
+
+        $name = get_string('template', 'assignsubmission_onlinetext');
+        $mform->addElement('editor', 'assignsubmission_onlinetext_template', $name);
+        $mform->addHelpButton('assignsubmission_onlinetext_template',
+                              'template',
+                              'assignsubmission_onlinetext');
+        $defaulttemplate = [
+            'text' => $defaulttemplatetext,
+            'format' => $defaulttemplateformat
+        ];
+        $mform->setDefault('assignsubmission_onlinetext_template', $defaulttemplate);
+        $mform->hideIf('assignsubmission_onlinetext_template',
+                           'assignsubmission_onlinetext_enabled',
+                           'notchecked');
     }
 
     /**
@@ -121,6 +138,10 @@ class assign_submission_onlinetext extends assign_submission_plugin {
         $this->set_config('wordlimit', $wordlimit);
         $this->set_config('wordlimitenabled', $wordlimitenabled);
 
+        $editor = $data->assignsubmission_onlinetext_template;
+        $this->set_config('template_text', $editor['text']);
+        $this->set_config('template_format', $editor['format']);
+
         return true;
     }
 
@@ -139,10 +160,10 @@ class assign_submission_onlinetext extends assign_submission_plugin {
         $submissionid = $submission ? $submission->id : 0;
 
         if (!isset($data->onlinetext)) {
-            $data->onlinetext = '';
+            $data->onlinetext = $this->get_config('template_text');
         }
         if (!isset($data->onlinetextformat)) {
-            $data->onlinetextformat = editors_get_preferred_format();
+            $data->onlinetextformat = $this->get_config('template_format');
         }
 
         if ($submission) {
@@ -151,7 +172,6 @@ class assign_submission_onlinetext extends assign_submission_plugin {
                 $data->onlinetext = $onlinetextsubmission->onlinetext;
                 $data->onlinetextformat = $onlinetextsubmission->onlineformat;
             }
-
         }
 
         $data = file_prepare_standard_editor($data,
