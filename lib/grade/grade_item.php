@@ -2505,7 +2505,7 @@ class grade_item extends grade_object {
             // database is in an invalid state - we will log an error and return
             // the course context but the calling code should be updated.
             if (!isset($modinfo->instances[$this->itemmodule][$this->iteminstance])) {
-                mtrace(get_string('moduleinstancedoesnotexist', 'error'));
+                debugging("Can not find $this->itemmodule activity with id $this->iteminstance");
                 $context = \context_course::instance($this->courseid);
             } else {
                 $cm = $modinfo->instances[$this->itemmodule][$this->iteminstance];
