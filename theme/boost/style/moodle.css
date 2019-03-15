@@ -15636,7 +15636,7 @@ div#dock {
 .path-mod-assign [data-region="grade-panel"] .fitem.row {
   margin: 0; }
 
-.path-mod-assign [data-region="grade-panel"] .fitem > .col-md-3 > .pull-xs-right {
+.path-mod-assign [data-region="grade-panel"] .fitem > .col-md-3 > .pull-right {
   float: none !important;
   /* stylelint-disable-line declaration-no-important */ }
 
