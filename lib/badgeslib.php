@@ -189,6 +189,69 @@ class badge {
     }
 
     /**
+     * Insert a new badge in the database and return a badge for it.
+     *
+     */
+    public static function create(string $name,
+                                  string $description,
+                                  string $issuername,
+                                  string $issuerurl,
+                                  string $issuercontact,
+                                  string $version,
+                                  string $language,
+                                  string $imageauthorname,
+                                  string $imageauthoremail,
+                                  string $imageauthorurl,
+                                  string $imagecaption,
+                                  int $type,
+                                  int $expiredate = null,
+                                  int $expireperiod = null,
+                                  int $courseid = null): badge {
+        global $DB, $USER, $CFG;
+
+        $badgerecord = new stdClass();
+        $badgerecord->name = $name;
+        $badgerecord->description = $description;
+        $badgerecord->issuername = $issuername;
+        $badgerecord->issuerurl = $issuerurl;
+        $badgerecord->issuercontact = $issuercontact;
+        $badgerecord->expiredate = $expiredate;
+        $badgerecord->expireperiod = $expireperiod;
+        $badgerecord->version = $version;
+        $badgerecord->language = $language;
+        $badgerecord->imageauthorname = $imageauthorname;
+        $badgerecord->imageauthoremail = $imageauthoremail;
+        $badgerecord->imageauthorurl = $imageauthorurl;
+        $badgerecord->imagecaption = $imagecaption;
+
+        $badgerecord->timecreated = time();
+        $badgerecord->timemodified = time();
+        $badgerecord->usercreated = $USER->id;
+        $badgerecord->usermodified = $USER->id;
+        if ($type != BADGE_TYPE_COURSE && $type != BADGE_TYPE_SITE) {
+            throw new coding_exception('Badge type does not exist');
+        }
+        if ($type == BADGE_TYPE_COURSE) {
+            if ($courseid <= 0) {
+                throw new coding_exception('Invalid course id');
+            }
+        }
+        $badgerecord->type = $type;
+        $badgerecord->courseid = $courseid;
+        // This means the badge message is created in the same language as the user creating the badge.
+        $badgerecord->message = get_string('messagebody', 'badges',
+            html_writer::link($CFG->wwwroot . '/badges/mybadges.php', get_string('managebadges', 'badges')));
+        $badgerecord->messagesubject = get_string('messagesubject', 'badges');
+        // These are the default values for new badges.
+        $badgerecord->attachment = 1;
+        $badgerecord->notification = BADGE_MESSAGE_NEVER;
+        $badgerecord->status = BADGE_STATUS_INACTIVE;
+
+        $newbadgeid = $DB->insert_record('badge', $badgerecord);
+        return new badge($newbadgeid);
+    }
+
+    /**
      * Use to get context instance of a badge.
      * @return context instance.
      */

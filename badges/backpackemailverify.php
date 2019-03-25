@@ -30,49 +30,6 @@ $data = optional_param('data', '', PARAM_RAW);
 require_login();
 $PAGE->set_url('/badges/openbackpackemailverify.php');
 $PAGE->set_context(context_user::instance($USER->id));
-$redirect = '/badges/mybackpack.php';
 
-// Confirm the secret and create the backpack connection.
-$storedsecret = get_user_preferences('badges_email_verify_secret');
-if (!is_null($storedsecret)) {
-    if ($data === $storedsecret) {
-        $storedemail = get_user_preferences('badges_email_verify_address');
-
-        $data = new stdClass();
-        $data->backpackurl = BADGE_BACKPACKURL;
-        $data->email = $storedemail;
-        $bp = new OpenBadgesBackpackHandler($data);
-
-        // Make sure we have all the required information before trying to save the connection.
-        $backpackuser = $bp->curl_request('user');
-        if (isset($backpackuser->status) && $backpackuser->status === 'okay' && isset($backpackuser->userId)) {
-            $backpackuid = $backpackuser->userId;
-        } else {
-            redirect(new moodle_url($redirect), get_string('backpackconnectionunexpectedresult', 'badges'),
-                null, \core\output\notification::NOTIFY_ERROR);
-        }
-
-        $obj = new stdClass();
-        $obj->userid = $USER->id;
-        $obj->email = $data->email;
-        $obj->backpackurl = $data->backpackurl;
-        $obj->backpackuid = $backpackuid;
-        $obj->autosync = 0;
-        $obj->password = '';
-        $DB->insert_record('badge_backpack', $obj);
-
-        // Remove the verification vars and redirect to the mypackpack page.
-        unset_user_preference('badges_email_verify_secret');
-        unset_user_preference('badges_email_verify_address');
-        redirect(new moodle_url($redirect), get_string('backpackemailverifysuccess', 'badges'),
-            null, \core\output\notification::NOTIFY_SUCCESS);
-    } else {
-        // Stored secret doesn't match the supplied secret. Take user back to the mybackpack page and present a warning message.
-        redirect(new moodle_url($redirect), get_string('backpackemailverifytokenmismatch', 'badges'),
-            null, \core\output\notification::NOTIFY_ERROR);
-    }
-} else {
-    // Stored secret is null. Either the email address has already been verified, or there is no record of a verification attempt
-    // for the current user. Either way, just redirect to the mybackpack page.
-    redirect(new moodle_url($redirect));
-}
+list($url, $message, $type) = \core_badges::verify_email($data);
+redirect($url, $message, null, $type);

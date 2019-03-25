@@ -65,11 +65,14 @@ class core_badges_privacy_testcase extends provider_testcase {
         $c2ctx = context_course::instance($c2->id);
 
         // Assert that we find contexts where we created/modified a badge.
-        $this->create_badge(['usercreated' => $u1->id, 'usermodified' => $u5->id]);
-        $this->create_badge(['usercreated' => $u2->id, 'type' => BADGE_TYPE_COURSE, 'courseid' => $c1->id]);
-        $this->create_badge(['usermodified' => $u3->id]);
-        $this->create_badge(['usermodified' => $u4->id, 'type' => BADGE_TYPE_COURSE, 'courseid' => $c2->id,
-            'usercreated' => $u5->id]);
+        $badge = $this->create_badge();
+        $this->update_badge_users($badge, $u1->id, $u5->id);
+        $badge = $this->create_badge(BADGE_TYPE_COURSE, $c1->id);
+        $this->update_badge_users($badge, $u2->id);
+        $badge = $this->create_badge();
+        $this->update_badge_users($badge, 0, $u3->id);
+        $badge = $this->create_badge(BADGE_TYPE_COURSE, $c2->id);
+        $this->update_badge_users($badge, $u5->id, $u4->id);
 
         $contexts = provider::get_contexts_for_userid($u1->id)->get_contextids();
         $this->assertCount(1, $contexts);
@@ -109,7 +112,7 @@ class core_badges_privacy_testcase extends provider_testcase {
         $u3ctx = context_user::instance($u3->id);
         $u4ctx = context_user::instance($u4->id);
         $b1 = $this->create_badge();
-        $b2 = $this->create_badge(['type' => BADGE_TYPE_COURSE, 'courseid' => $c1->id]);
+        $b2 = $this->create_badge(BADGE_TYPE_COURSE, $c1->id);
 
         $this->create_manual_award(['recipientid' => $u4->id, 'issuerid' => $u1->id, 'badgeid' => $b1->id]);
         $this->create_manual_award(['recipientid' => $u3->id, 'issuerid' => $u2->id, 'badgeid' => $b1->id]);
@@ -140,9 +143,10 @@ class core_badges_privacy_testcase extends provider_testcase {
         $u3ctx = context_user::instance($u3->id);
         $u4ctx = context_user::instance($u4->id);
         $b1 = $this->create_badge();
-        $b2 = $this->create_badge(['type' => BADGE_TYPE_COURSE, 'courseid' => $c1->id]);
+        $b2 = $this->create_badge(BADGE_TYPE_COURSE, $c1->id);
 
-        $this->create_backpack(['userid' => $u1->id]);
+        $bp = $this->create_backpack();
+        $this->update_backpack_user($bp, $u1->id);
         $this->create_manual_award(['recipientid' => $u2->id, 'badgeid' => $b1->id]);
         $this->create_issued(['badgeid' => $b2->id, 'userid' => $u3->id]);
 
@@ -178,12 +182,15 @@ class core_badges_privacy_testcase extends provider_testcase {
         $u1ctx = context_user::instance($u1->id);
         $u2ctx = context_user::instance($u2->id);
 
-        $b1 = $this->create_badge(['usercreated' => $u1->id, 'usermodified' => $u2->id]);
-        $b2 = $this->create_badge(['usercreated' => $u2->id, 'usermodified' => $u1->id,
-            'type' => BADGE_TYPE_COURSE, 'courseid' => $c1->id]);
+        $b1 = $this->create_badge();
+        $this->update_badge_users($b1, $u1->id, $u2->id);
+        $b2 = $this->create_badge(BADGE_TYPE_COURSE, $c1->id);
+        $this->update_badge_users($b2, $u2->id, $u1->id);
 
-        $this->create_backpack(['userid' => $u1->id]);
-        $this->create_backpack(['userid' => $u2->id]);
+        $bp = $this->create_backpack();
+        $this->update_backpack_user($bp, $u1->id);
+        $bp = $this->create_backpack();
+        $this->update_backpack_user($bp, $u2->id);
         $this->create_manual_award(['recipientid' => $u1->id, 'badgeid' => $b1->id]);
         $this->create_manual_award(['recipientid' => $u2->id, 'badgeid' => $b1->id, 'issuerid' => $u1->id]);
         $this->create_issued(['badgeid' => $b2->id, 'userid' => $u1->id]);
@@ -236,12 +243,15 @@ class core_badges_privacy_testcase extends provider_testcase {
         $u1ctx = context_user::instance($u1->id);
         $u2ctx = context_user::instance($u2->id);
 
-        $b1 = $this->create_badge(['usercreated' => $u1->id, 'usermodified' => $u2->id]);
-        $b2 = $this->create_badge(['usercreated' => $u2->id, 'usermodified' => $u1->id,
-            'type' => BADGE_TYPE_COURSE, 'courseid' => $c1->id]);
+        $b1 = $this->create_badge();
+        $this->update_badge_users($b1, $u1->id, $u2->id);
+        $b2 = $this->create_badge(BADGE_TYPE_COURSE, $c1->id);
+        $this->update_badge_users($b2, $u2->id, $u1->id);
 
-        $this->create_backpack(['userid' => $u1->id]);
-        $this->create_backpack(['userid' => $u2->id]);
+        $bp = $this->create_backpack();
+        $this->update_backpack_user($bp, $u1->id);
+        $bp = $this->create_backpack();
+        $this->update_backpack_user($bp, $u2->id);
         $this->create_manual_award(['recipientid' => $u1->id, 'badgeid' => $b1->id]);
         $this->create_manual_award(['recipientid' => $u2->id, 'badgeid' => $b1->id, 'issuerid' => $u1->id]);
         $this->create_issued(['badgeid' => $b2->id, 'userid' => $u1->id]);
@@ -305,22 +315,27 @@ class core_badges_privacy_testcase extends provider_testcase {
         $u1ctx = context_user::instance($u1->id);
         $u2ctx = context_user::instance($u2->id);
 
-        $b1 = $this->create_badge(['usercreated' => $u3->id]);
-        $b2 = $this->create_badge(['type' => BADGE_TYPE_COURSE, 'courseid' => $c1->id, 'usermodified' => $u3->id]);
+        $b1 = $this->create_badge();
+        $this->update_badge_users($b1, $u3->id);
+        $b2 = $this->create_badge(BADGE_TYPE_COURSE, $c1->id);
+        $this->update_badge_users($b2, 0, $u3->id);
         $b3 = $this->create_badge();
         $b3crit = $this->create_criteria_manual($b3->id);
         $b4 = $this->create_badge();
 
         // Create things for user 2, to check it's not exported it.
         $this->create_issued(['badgeid' => $b4->id, 'userid' => $u2->id]);
-        $this->create_backpack(['userid' => $u2->id, 'email' => $u2->email]);
+        $bp = $this->create_backpack($u2->email);
+        $this->update_backpack_user($bp, $u2->id);
+
         $this->create_manual_award(['badgeid' => $b1->id, 'recipientid' => $u2->id, 'issuerid' => $u3->id]);
 
         // Create a set of stuff for u1.
         $this->create_issued(['badgeid' => $b1->id, 'userid' => $u1->id, 'uniquehash' => 'yoohoo']);
         $this->create_manual_award(['badgeid' => $b2->id, 'recipientid' => $u1->id, 'issuerid' => $u3->id]);
         $b3crit->mark_complete($u1->id);
-        $this->create_backpack(['userid' => $u1->id, 'email' => $u1->email]);
+        $bp = $this->create_backpack($u1->email);
+        $this->update_backpack_user($bp, $u1->id);
 
         // Check u1.
         writer::reset();
@@ -437,15 +452,19 @@ class core_badges_privacy_testcase extends provider_testcase {
         $this->assertCount(0, $userlist3);
 
         // Assert that we find contexts where we created/modified a badge.
-        $this->create_badge(['usercreated' => $user1->id, 'usermodified' => $user2->id]);
-        $badge1 = $this->create_badge(['usercreated' => $user2->id, 'type' => BADGE_TYPE_COURSE, 'courseid' => $course1->id]);
-        $badge2 = $this->create_badge(['usercreated' => $user3->id, 'usermodified' => $user1->id]);
+        $badge0 = $this->create_badge();
+        $this->update_badge_users($badge0, $user1->id, $user2->id);
+        $badge1 = $this->create_badge(BADGE_TYPE_COURSE, $course1->id);
+        $this->update_badge_users($badge1, $user2->id);
+        $badge2 = $this->create_badge();
+        $this->update_badge_users($badge2, $user3->id, $user1->id);
 
         $this->create_manual_award(['recipientid' => $user2->id, 'issuerid' => $user1->id, 'badgeid' => $badge1->id]);
         $this->create_manual_award(['recipientid' => $user3->id, 'issuerid' => $user2->id, 'badgeid' => $badge1->id]);
         $this->create_manual_award(['recipientid' => $user1->id, 'issuerid' => $user2->id, 'badgeid' => $badge2->id]);
 
-        $this->create_backpack(['userid' => $user2->id]);
+        $bp = $this->create_backpack();
+        $this->update_backpack_user($bp, $user2->id);
         $this->create_issued(['badgeid' => $badge2->id, 'userid' => $user3->id]);
 
         $crit = $this->create_criteria_manual($badge1->id);
@@ -492,16 +511,19 @@ class core_badges_privacy_testcase extends provider_testcase {
         $user3 = $this->getDataGenerator()->create_user();
         $usercontext3 = context_user::instance($user3->id);
 
-        $this->create_badge(['usercreated' => $user1->id, 'usermodified' => $user2->id]);
-        $badge1 = $this->create_badge(['usercreated' => $user2->id, 'type' => BADGE_TYPE_COURSE, 'courseid' => $course1->id]);
-        $badge2 = $this->create_badge(['usercreated' => $user3->id, 'type' => BADGE_TYPE_COURSE, 'courseid' => $course2->id,
-            'usermodified' => $user1->id]);
+        $badge0 = $this->create_badge();
+        $this->update_badge_users($badge0, $user1->id, $user2->id);
+        $badge1 = $this->create_badge(BADGE_TYPE_COURSE, $course1->id);
+        $this->update_badge_users($badge1, $user2->id);
+        $badge2 = $this->create_badge(BADGE_TYPE_COURSE, $course2->id);
+        $this->update_badge_users($badge2, $user3->id, $user1->id);
 
         $this->create_manual_award(['recipientid' => $user2->id, 'issuerid' => $user1->id, 'badgeid' => $badge1->id]);
         $this->create_manual_award(['recipientid' => $user3->id, 'issuerid' => $user2->id, 'badgeid' => $badge1->id]);
         $this->create_manual_award(['recipientid' => $user1->id, 'issuerid' => $user2->id, 'badgeid' => $badge2->id]);
 
-        $this->create_backpack(['userid' => $user2->id]);
+        $bp = $this->create_backpack();
+        $this->update_backpack_user($bp, $user2->id);
         $this->create_issued(['badgeid' => $badge2->id, 'userid' => $user3->id]);
 
         $crit = $this->create_criteria_manual($badge1->id);
@@ -577,31 +599,49 @@ class core_badges_privacy_testcase extends provider_testcase {
      * @param array $params Parameters.
      * @return object
      */
-    protected function create_badge(array $params = []) {
-        global $DB, $USER;
-        $record = (object) array_merge([
-            'name' => "Test badge with 'apostrophe' and other friends (<>&@#)",
-            'description' => "Testing badges",
-            'timecreated' => time(),
-            'timemodified' => time(),
-            'usercreated' => $USER->id,
-            'usermodified' => $USER->id,
-            'issuername' => "Test issuer",
-            'issuerurl' => "http://issuer-url.domain.co.nz",
-            'issuercontact' => "issuer@example.com",
-            'expiredate' => null,
-            'expireperiod' => null,
-            'type' => BADGE_TYPE_SITE,
-            'courseid' => null,
-            'messagesubject' => "Test message subject",
-            'message' => "Test message body",
-            'attachment' => 1,
-            'notification' => 0,
-            'status' => BADGE_STATUS_ACTIVE,
-        ], $params);
-        $record->id = $DB->insert_record('badge', $record);
+    protected function create_badge($type = BADGE_TYPE_SITE,
+                                    $courseid = null,
+                                    $name = 'Test badge with \'apostrophe\' and other friends (<>&@#)',
+                                    $description = 'Testing badges',
+                                    $issuername = 'Test issuer',
+                                    $issuerurl = 'http://issuer-url.domain.co.nz',
+                                    $issuercontact = 'issuer@example.com',
+                                    $version = '',
+                                    $language = 'en',
+                                    $imageauthorname = '',
+                                    $imageauthoremail = '',
+                                    $imageauthorurl = '',
+                                    $imagecaption = '',
+                                    $expiredate = null,
+                                    $expireperiod = null) {
 
-        return $record;
+        $badge = badge::create($name, $description, $issuername, $issuerurl, $issuercontact, $version, $language, $imageauthorname,
+                        $imageauthoremail, $imageauthorurl, $imagecaption, $type, $expiredate, $expireperiod, $courseid);
+
+        // For testing we default to active badges.
+        $badge->status = BADGE_STATUS_ACTIVE;
+        $badge->save();
+
+        return $badge;
+    }
+
+    /**
+     * Update the database directly to change the usercreated and usermodified fields for badge.
+     *
+     * @param badge $badge to update.
+     * @param int $usercreated The user who created the badge.
+     * @param int $usermodified The user who modified the badge.
+     * @return badge
+     */
+    protected function update_badge_users(badge $badge, int $usercreated = 0, int $usermodified = 0) {
+        if ($usercreated > 0) {
+            $badge->usercreated = $usercreated;
+        }
+        if ($usermodified > 0) {
+            $badge->usermodified = $usermodified;
+        }
+        $badge->save();
+        return $badge;
     }
 
     /**
@@ -610,18 +650,30 @@ class core_badges_privacy_testcase extends provider_testcase {
      * @param array $params Parameters.
      * @return object
      */
-    protected function create_backpack(array $params = []) {
-        global $DB;
-        $record = (object) array_merge([
-            'userid' => null,
-            'email' => 'test@example.com',
-            'backpackurl' => "http://here.there.com",
-            'backpackuid' => "12345",
-            'autosync' => 0,
-            'password' => '',
-        ], $params);
-        $record->id = $DB->insert_record('badge_backpack', $record);
-        return $record;
+    protected function create_backpack(string $email = 'test@example.com',
+                                       string $backpackurl = 'http://here.there.com',
+                                       string $backpackuid = '12345',
+                                       bool $autosync = false,
+                                       string $password = '') {
+
+        return \core_badges\backpack::create($email,
+                                  $backpackurl,
+                                  $backpackuid,
+                                  $autosync,
+                                  $password);
+    }
+
+    /**
+     * Update the database directly to change the userid field for backpack.
+     *
+     * @param core_badges\backpack $backpack to update.
+     * @param int $userid The new userid for the backpack.
+     * @return core_badges\backpack
+     */
+    protected function update_backpack_user(\core_badges\backpack $backpack, int $userid) {
+        $backpack->userid = $userid;
+        $backpack->save();
+        return $backpack;
     }
 
     /**
@@ -713,7 +765,13 @@ class core_badges_privacy_testcase extends provider_testcase {
      * @param array $params Parameters.
      * @return object
      */
-    protected function create_manual_award(array $params = []) {
+    // protected function create_manual_award(array $params = []) {
+    protected function create_manual_award(badge $badge, $recipientid) {
+        $data = new stdClass();
+        $data->crit = $badge->criteria[BADGE_CRITERIA_TYPE_MANUAL];
+        $data->userid = $recipientid;
+        badges_award_handle_manual_criteria_review($data);
+        /*
         global $DB, $USER;
         $record = (object) array_merge([
             'badgeid' => null,
@@ -724,6 +782,7 @@ class core_badges_privacy_testcase extends provider_testcase {
         ], $params);
         $record->id = $DB->insert_record('badge_manual_award', $record);
         return $record;
+        */
     }
 
 }

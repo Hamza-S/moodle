@@ -74,48 +74,41 @@ if ($form->is_cancelled()) {
     redirect(new moodle_url('/badges/index.php', array('type' => $type, 'id' => $courseid)));
 } else if ($data = $form->get_data()) {
     // Creating new badge here.
-    $now = time();
 
-    $fordb->name = $data->name;
-    $fordb->version = $data->version;
-    $fordb->language = $data->language;
-    $fordb->description = $data->description;
-    $fordb->imageauthorname = $data->imageauthorname;
-    $fordb->imageauthoremail = $data->imageauthoremail;
-    $fordb->imageauthorurl = $data->imageauthorurl;
-    $fordb->imagecaption = $data->imagecaption;
-    $fordb->timecreated = $now;
-    $fordb->timemodified = $now;
-    $fordb->usercreated = $USER->id;
-    $fordb->usermodified = $USER->id;
-    $fordb->issuername = $data->issuername;
-    $fordb->issuerurl = $data->issuerurl;
-    $fordb->issuercontact = $data->issuercontact;
-    $fordb->expiredate = ($data->expiry == 1) ? $data->expiredate : null;
-    $fordb->expireperiod = ($data->expiry == 2) ? $data->expireperiod : null;
-    $fordb->type = $type;
-    $fordb->courseid = ($type == BADGE_TYPE_COURSE) ? $courseid : null;
-    $fordb->messagesubject = get_string('messagesubject', 'badges');
-    $fordb->message = get_string('messagebody', 'badges',
-            html_writer::link($CFG->wwwroot . '/badges/mybadges.php', get_string('managebadges', 'badges')));
-    $fordb->attachment = 1;
-    $fordb->notification = BADGE_MESSAGE_NEVER;
-    $fordb->status = BADGE_STATUS_INACTIVE;
+    // We checked permissions, and the form validated the type of the parameters so we are free to
+    // create the badge in the DB.
 
-    $newid = $DB->insert_record('badge', $fordb, true);
+    $expiredate = ($data->expiry == 1) ? $data->expiredate : null;
+    $expireperiod = ($data->expiry == 2) ? $data->expireperiod : null;
+    $badgecourseid = ($type == BADGE_TYPE_COURSE) ? $courseid : null;
+    $newbadge = badge::create(
+        $data->name,
+        $data->description,
+        $data->issuername,
+        $data->issuerurl,
+        $data->issuercontact,
+        $data->version,
+        $data->language,
+        $data->imageauthorname,
+        $data->imageauthoremail,
+        $data->imageauthorurl,
+        $data->imagecaption,
+        $type,
+        $expiredate,
+        $expireperiod,
+        $badgecourseid);
 
     // Trigger event, badge created.
-    $eventparams = array('objectid' => $newid, 'context' => $PAGE->context);
+    $eventparams = array('objectid' => $newbadge->id, 'context' => $PAGE->context);
     $event = \core\event\badge_created::create($eventparams);
     $event->trigger();
 
-    $newbadge = new badge($newid);
     badges_process_badge_image($newbadge, $form->save_temp_file('image'));
     // If a user can configure badge criteria, they will be redirected to the criteria page.
     if (has_capability('moodle/badges:configurecriteria', $PAGE->context)) {
-        redirect(new moodle_url('/badges/criteria.php', array('id' => $newid)));
+        redirect(new moodle_url('/badges/criteria.php', array('id' => $newbadge->id)));
     }
-    redirect(new moodle_url('/badges/overview.php', array('id' => $newid)));
+    redirect(new moodle_url('/badges/overview.php', array('id' => $newbadge->id)));
 }
 
 echo $OUTPUT->header();
