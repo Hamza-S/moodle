@@ -92,7 +92,11 @@ class collections extends moodleform {
                     $count = count($group->assertions);
                 }
                 if (!empty($group->badges)) {
-                    $count = count($group->badges);
+                    if (is_numeric($group->badges)) {
+                        $count = $group->badges;
+                    } else {
+                        $count = count($group->badges);
+                    }
                 }
                 if (!empty($group->groupId)) {
                     $group->entityId = $group->groupId;
