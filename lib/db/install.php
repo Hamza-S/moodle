@@ -320,6 +320,6 @@ function xmldb_main_install() {
     make_default_scale();
     make_competence_scale();
 
-    require_once($CFG->libdir . '/badgeslib.php');
+    require_once($CFG->dirroot . '/badges/upgradelib.php'); // Core Upgrade-related functions only for badges.
     badges_install_default_backpacks();
 }
