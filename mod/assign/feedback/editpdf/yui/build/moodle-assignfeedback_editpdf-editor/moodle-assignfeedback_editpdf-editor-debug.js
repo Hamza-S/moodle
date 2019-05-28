@@ -3653,6 +3653,7 @@ EDITOR.prototype = {
         drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
         drawingregion.on('scroll', this.move_canvas, this);
 
+        Y.on(M.core.event.REGION_RESIZED, this.resize, this);
         if (!this.get('readonly')) {
             drawingcanvas.on('gesturemovestart', this.edit_start, null, this);
             drawingcanvas.on('gesturemove', this.edit_move, null, this);

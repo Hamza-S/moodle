@@ -60,6 +60,12 @@ define(['jquery', 'core/yui', 'core/notification', 'core/templates', 'core/fragm
      /** @type {Boolean} Next user exists in the grading list */
     GradingPanel.prototype.nextUser = false;
 
+     /** @type {Integer} Number of frames of animation still to go */
+    GradingPanel.prototype.animationFrames = 0;
+
+     /** @type {Mixed} Result of setInterval used to clear the loop */
+    GradingPanel.prototype.animationLoop = null;
+
     /**
      * Fade the dom node out, update it, and fade it back.
      *
@@ -137,8 +143,8 @@ define(['jquery', 'core/yui', 'core/notification', 'core/templates', 'core/fragm
      * @method _handleFormSubmissionResponse
      * @param {Array} formdata - submitted values
      * @param {Integer} nextUserId - optional. The id of the user to load after the form is saved.
-     * @param {Array} response List of errors.
      * @param {Boolean} nextUser - optional. If true, switch to next user in the grading list.
+     * @param {Array} response List of errors.
      */
     GradingPanel.prototype._handleFormSubmissionResponse = function(formdata, nextUserId, nextUser, response) {
         if (typeof nextUserId === "undefined") {
@@ -354,12 +360,35 @@ define(['jquery', 'core/yui', 'core/notification', 'core/templates', 'core/fragm
     };
 
     /**
+     * Get the drawing panel element.
+     *
+     * @method getDrawingRegionElement
+     * @return {jQuery}
+     */
+    GradingPanel.prototype.getDrawingRegionElement = function() {
+        return $('[data-region="review-panel"] .drawingregion');
+    };
+
+    /**
      * Hide the grade panel.
      *
      * @method collapsePanel
      */
     GradingPanel.prototype.collapsePanel = function() {
         this.getPanelElement().addClass('collapsed');
+        if (this.animationLoop === null) {
+            this.animationFrames = 11;
+            var updateFrame = function() {
+                if (this.animationFrames > 0) {
+                    Event.notifyRegionResized(this.getDrawingRegionElement()[0]);
+                    this.animationFrames--;
+                } else {
+                    window.clearInterval(this.animationLoop);
+                    this.animationLoop = null;
+                }
+            }.bind(this);
+            this.animationLoop = window.setInterval(updateFrame, 50);
+        }
     };
 
     /**
@@ -369,6 +398,19 @@ define(['jquery', 'core/yui', 'core/notification', 'core/templates', 'core/fragm
      */
     GradingPanel.prototype.expandPanel = function() {
         this.getPanelElement().removeClass('collapsed');
+        if (this.animationLoop === null) {
+            this.animationFrames = 11;
+            var updateFrame = function() {
+                if (this.animationFrames > 0) {
+                    Event.notifyRegionResized(this.getDrawingRegionElement()[0]);
+                    this.animationFrames--;
+                } else {
+                    window.clearInterval(this.animationLoop);
+                    this.animationLoop = null;
+                }
+            }.bind(this);
+            this.animationLoop = window.setInterval(updateFrame, 50);
+        }
     };
 
     /**

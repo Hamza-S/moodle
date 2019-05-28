@@ -345,10 +345,10 @@ ul.assignfeedback_editpdf_menu {
 
 .assignfeedback_editpdf_widget .commentdrawable {
     display: flex;
-    // Set the z-index so the comments will appear above stamps when expanded.
+    /** Set the z-index so the comments will appear above stamps when expanded. */
     z-index: 50;
-    // Squash the height so the comments do not move other annotations when opened and closed.
-    height: 0px;
+    /** Squash the height so the comments do not move other annotations when opened and closed. */
+    height: 0;
 }
 
 .assignfeedback_editpdf_widget .commentdrawable label {
